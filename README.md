@@ -58,6 +58,8 @@ It provides a player object which represents the player. It needs a generator `p
 It has the following functionality:
 
 * Plays audio data via the player object. Uses [FFmpeg](http://ffmpeg.org/) for decoding and [PortAudio](http://www.portaudio.com/) for playing.
+* Of course, the decoding and playback is done in seperate threads. You can read about that [here](http://sourceforge.net/p/az-music-player/blog/2014/01/improving-the-audio-callback-removing-audio-glitches/).
+* Supports any sample rate via `player.outSamplerate`. The preferred sound device is set via `player.preferredSoundDevice`. Get a list of all sound devices via `getSoundDevices()`.
 * Can modify the volume via `player.volume` and also `song.gain` (see source code for details).
 * Prevents clipping via a smooth limiting functions which still leaves most sounds unaffected and keeps the dynamic range (see `smoothClip`).
 * Can calculate the [ReplayGain](http://www.replaygain.org/) value for a song (see `pyCalcReplayGain`). This is as far as I know the only other implementation of ReplayGain despite the original from [mp3gain](http://mp3gain.sourceforge.net/) ([gain_analysis.c](http://mp3gain.cvs.sourceforge.net/viewvc/mp3gain/mp3gain/gain_analysis.c?view=markup)).
