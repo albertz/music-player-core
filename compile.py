@@ -16,8 +16,8 @@ os.chdir("build")
 
 staticChromaprint = False
 
-ffmpegFiles = ["../ffmpeg.c"] + \
-	glob("../ffmpeg_*.cpp") + \
+ffmpegFiles = ["../musicplayer.c"] + \
+	glob("../musicplayer_*.cpp") + \
 	(glob("../chromaprint/*.cpp") if staticChromaprint else [])
 
 cc(
@@ -31,7 +31,7 @@ cc(
 )
 
 link(
-	"../ffmpeg.so",
+	"../musicplayer.so",
 	[c.get_cc_outfilename(fn) for fn in ffmpegFiles],
 	[
 		"-lavutil",
@@ -43,13 +43,4 @@ link(
 	get_python_linkopts() +
 	([] if staticChromaprint else ["-lchromaprint"])
 )
-
-if sys.platform == "darwin":
-	guiCocoaCommonFiles = glob("../mac/guiCocoaCommon/*.m")
-	cc(guiCocoaCommonFiles,	[])
-	link(
-		"../_guiCocoaCommon.dylib",
-		[os.path.splitext(os.path.basename(fn))[0] + ".o" for fn in guiCocoaCommonFiles],
-		["-framework", "Cocoa"]
-	)
 
