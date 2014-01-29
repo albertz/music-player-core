@@ -4,8 +4,8 @@
 // All rights reserved.
 // This code is under the 2-clause BSD license, see License.txt in the root directory of this project.
 
-#ifndef MusicPlayer_ffmpeg_h
-#define MusicPlayer_ffmpeg_h
+#ifndef MusicPlayer_musicplayer_h
+#define MusicPlayer_musicplayer_h
 
 // Import Python first. This will define _GNU_SOURCE. This is needed to get strdup (and maybe others). We could also define _GNU_SOURCE ourself, but pyconfig.h from Python has troubles then and redeclares some other stuff. So, to just import Python first is the simplest way.
 #include <Python.h>
