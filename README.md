@@ -96,6 +96,7 @@ Then call `./compile.py` to build the Python modules (it will build the Python m
 * *Overview* in Python Wiki: [Audio modules](https://wiki.python.org/moin/Audio) and [Music software](https://wiki.python.org/moin/PythonInMusic).
 
 * [PyAudio](http://people.csail.mit.edu/hubert/pyaudio/). MIT License. PortAudio wrapper. Thus, pretty low-level and no decoding functionality. Last update from 2012.
+* [PyFFmpeg](http://code.google.com/p/pyffmpeg/). LGPL. FFmpeg wrapper. Thus, prettylow-level and no sound output. You could probably glue PyFFmpeg and PyAudio together for something useful but I expect it to be quite unstable and too slow. Basically, tis glue is done in C++ in this module.
 * [GStreamer Python Bindings](http://gstreamer.freedesktop.org/modules/gst-python.html). GStreamer is powerful but still too limited as a cross-platform music player backend solution. Quite heavy. That was my intuition. Maybe it's wrong and it would have been a perfect solution. But I think, in contrast, this module does a lot of things in a more compact and automatic/simpler way and at the same time provides more music player centric features.
 * [Beets](http://beets.radbox.org/). In it's core, it is a music library manager and manages the metadata. It can calculate ReplayGain and AcoustID fingerprint. Via BPD plugin, it becomes a MPD compatible daemon player, based on GStreamer.
 
