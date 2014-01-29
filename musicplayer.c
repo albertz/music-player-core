@@ -5,8 +5,8 @@
 // This code is under the 2-clause BSD license, see License.txt in the root directory of this project.
 
 // compile:
-// gcc -c ffmpeg*.{c,cpp} -I /System/Library/Frameworks/Python.framework/Headers/
-// libtool -dynamic -o ffmpeg.so ffmpeg*.o -framework Python -lavformat -lavutil -lavcodec -lswresample -lportaudio -lc
+// gcc -c musicplayer*.{c,cpp} -I /System/Library/Frameworks/Python.framework/Headers/
+// libtool -dynamic -o musicplayer.so musicplayer*.o -framework Python -lavformat -lavutil -lavcodec -lswresample -lportaudio -lc
 
 // loosely based on ffplay.c
 // https://github.com/FFmpeg/ffmpeg/blob/master/ffplay.c
@@ -58,7 +58,7 @@ static PyMethodDef module_methods[] = {
 };
 
 PyDoc_STRVAR(module_doc,
-"FFmpeg player.");
+"Music player.");
 
 static PyObject* EventClass = NULL;
 
@@ -70,15 +70,15 @@ static void init() {
 
 
 PyMODINIT_FUNC
-initffmpeg(void)
+initmusicplayer(void)
 {
-	//printf("initffmpeg\n");
+	//printf("initmusicplayer\n");
 	init();
 	if (PyType_Ready(&Player_Type) < 0)
 		Py_FatalError("Can't initialize player type");
-	PyObject* m = Py_InitModule3("ffmpeg", module_methods, module_doc);
+	PyObject* m = Py_InitModule3("musicplayer", module_methods, module_doc);
 	if(!m) {
-		Py_FatalError("Can't initialize ffmpeg module");
+		Py_FatalError("Can't initialize musicplayer module");
 		return;
 	}
 	
