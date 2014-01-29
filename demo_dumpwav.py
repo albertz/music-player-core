@@ -10,8 +10,8 @@ PrintProgress = True
 
 
 import sys, os, time
-import ffmpeg
-player = ffmpeg.createPlayer()
+import musicplayer
+player = musicplayer.createPlayer()
 
 # Check if ffmpeg player is supported, i.e. version recent enough.
 assert hasattr(player, "soundcardOutputEnabled")

@@ -5,7 +5,7 @@
 import better_exchook
 better_exchook.install()
 
-import ffmpeg
+import musicplayer
 
 class Song:
 	def __init__(self, fn):
@@ -41,7 +41,7 @@ def songs():
 		i += 1
 		if i >= len(files): i = 0
 
-player = ffmpeg.createPlayer()
+player = musicplayer.createPlayer()
 player.queue = songs()
 player.playing = True
 

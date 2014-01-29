@@ -29,13 +29,13 @@ files = getFileList(N)
 from pprint import pprint
 pprint(files)
 
-import ffmpeg
+import musicplayer
 print "imported"
 step()
 
 
 for i in xrange(N):
-	ffmpeg.createPlayer()
+	musicplayer.createPlayer()
 
 print "after createPlayer"
 step()
@@ -53,7 +53,7 @@ class Song:
 		return self.f.tell()
 
 for f in files:
-	ffmpeg.getMetadata(Song(f))
+	musicplayer.getMetadata(Song(f))
 	progr()
 
 print "after getMetadata"
@@ -61,7 +61,7 @@ step()
 
 
 for f in files:
-	ffmpeg.calcAcoustIdFingerprint(Song(f))
+	musicplayer.calcAcoustIdFingerprint(Song(f))
 	progr()
 
 print "after calcAcoustIdFingerprint"
@@ -69,7 +69,7 @@ step()
 
 
 for f in files:
-	ffmpeg.calcBitmapThumbnail(Song(f))
+	musicplayer.calcBitmapThumbnail(Song(f))
 	progr()
 
 print "after calcBitmapThumbnail"

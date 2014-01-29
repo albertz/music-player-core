@@ -39,8 +39,8 @@ if len(sys.argv) >= 3:
 	fingerprint = sys.argv[2]
 else:
 	assert os.path.isfile(filename)
-	import ffmpeg
-	duration, fingerprint = ffmpeg.calcAcoustIdFingerprint(Song(filename))
+	import musicplayer
+	duration, fingerprint = musicplayer.calcAcoustIdFingerprint(Song(filename))
 
 print "fingerprint for", os.path.basename(filename), "is:", duration, fingerprint
 

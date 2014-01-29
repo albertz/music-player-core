@@ -37,12 +37,12 @@ else:
 print(os.path.basename(filename))
 assert os.path.isfile(filename)
 
-import ffmpeg
-metadata = ffmpeg.getMetadata(Song(filename))
+import musicplayer
+metadata = musicplayer.getMetadata(Song(filename))
 from pprint import pprint
 pprint(metadata)
 
-duration, replaygain = ffmpeg.calcReplayGain(Song(filename))
+duration, replaygain = musicplayer.calcReplayGain(Song(filename))
 print("duration: %f" % duration)
 print("replaygain: %f" % replaygain)
 print("gain factor: %f" % (10. ** (replaygain / 20)))

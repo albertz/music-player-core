@@ -40,8 +40,8 @@ timelineColor = (100,100,100)
 timelineInterval = 5 # every 5 sec
 
 assert os.path.isfile(filename)
-import ffmpeg
-duration, bmp = ffmpeg.calcBitmapThumbnail(Song(filename), bmpWidth, bmpHeight, bgColor, timelineColor, timelineInterval)
+import musicplayer
+duration, bmp = musicplayer.calcBitmapThumbnail(Song(filename), bmpWidth, bmpHeight, bgColor, timelineColor, timelineInterval)
 
 def formatTime(t):
 	if t is None: return "?"

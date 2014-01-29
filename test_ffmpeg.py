@@ -5,10 +5,10 @@
 import better_exchook
 better_exchook.install()
 
-import ffmpeg
+import musicplayer
 
 # ffmpeg log levels: {0:panic, 8:fatal, 16:error, 24:warning, 32:info, 40:verbose}
-ffmpeg.setFfmpegLogLevel(20)
+musicplayer.setFfmpegLogLevel(20)
 
 try:
 	import faulthandler
@@ -60,7 +60,7 @@ def peekSongs(n):
 	if nexti >= len(files): nexti = 0
 	return map(Song, files[nexti:] + files[:nexti])
 
-player = ffmpeg.createPlayer()
+player = musicplayer.createPlayer()
 player.outSamplerate = 48000
 player.queue = songs()
 player.peekQueue = peekSongs
