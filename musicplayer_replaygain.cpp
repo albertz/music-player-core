@@ -4,7 +4,7 @@
 // All rights reserved.
 // This code is under the 2-clause BSD license, see License.txt in the root directory of this project.
 
-#include "ffmpeg.h"
+#include "musicplayer.h"
 
 // Note: The yule/butter tables below have hardcoded values for this samplerate.
 #define SAMPLERATE 44100

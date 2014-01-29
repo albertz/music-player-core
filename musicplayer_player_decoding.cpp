@@ -8,7 +8,7 @@
 #define __STDC_LIMIT_MACROS
 #include <stdint.h>
 
-#include "ffmpeg.h"
+#include "musicplayer.h"
 #include "PyUtils.h"
 #include "Log.hpp"
 #include "PythonHelpers.h"

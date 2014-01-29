@@ -1,5 +1,5 @@
 
-// must be first include because of Python stuff, see ffmpeg.h comment
+// must be first include because of Python stuff, see musicplayer.h comment
 #include "PyThreading.hpp" // mlock
 
 #include <algorithm>

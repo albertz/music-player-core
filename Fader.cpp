@@ -1,5 +1,5 @@
 
-#include "ffmpeg.h" // for Player, used in Fader::wait()
+#include "musicplayer.h" // for Player, used in Fader::wait()
 #include "PyThreading.hpp" // used in Fader::wait()
 
 #include <assert.h>
