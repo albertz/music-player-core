@@ -44,7 +44,7 @@ setup(
 		'Operating System :: POSIX',
 		'Operating System :: Unix',
 		'Programming Language :: C++',
-		'Programming Language :: Python'
+		'Programming Language :: Python',
 		'Topic :: Multimedia :: Sound/Audio',
 		'Topic :: Multimedia :: Sound/Audio :: Analysis',
 		'Topic :: Multimedia :: Sound/Audio :: Players',
