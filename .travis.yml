@@ -12,12 +12,15 @@ before_install:
  - tar --bzip2 -xf boost_1_54_0.tar.bz2
  - cd boost_1_54_0
  - ./bootstrap.sh --help
+# We only need atomic (and also only header-only).
+# All the rest takes way too much time to compile.
  - sudo ./bootstrap.sh --with-libraries="atomic"
- - sudo ./b2 install
+# Way too much output, so just display the last 50 lines.
+ - sudo ./b2 install | tail -n 50
  - cd ..
 
-#env:
-#  CFLAGS=-Iboost_1_54_0
+env:
+  CFLAGS=-I/usr/local/include
 
 install:
   - sudo apt-get update
