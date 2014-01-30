@@ -17,3 +17,7 @@ thumbnail.bmp
 
 .idea
 xcshareddata
+
+# Python distutils
+/MANIFEST
+/dist
