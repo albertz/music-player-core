@@ -107,7 +107,37 @@ To get the source working, you need these requirements (e.g. install on MacOSX v
 * portaudio
 * chromaprint
 
-(Debian/Ubuntu: ``apt-get install python-dev libsnappy-dev libtool yasm libchromaprint-dev portaudio19-dev libboost-dev``. FFmpeg in Debian/Ubuntu is too old (lacks libswresample), so either do ``add-apt-repository ppa:jon-severinsson/ffmpeg && apt-get update && apt-get install libavformat-dev libswresample-dev`` or install it from source. `Chromaprint <http://acoustid.org/chromaprint>`_ depends on FFmpeg, so if you have a custom FFmpeg install, you might also want to install that manually. ``./configure && make && sudo make install`` should work for FFmpeg and PortAudio. You might also want to use ``--enable-shared`` for FFmpeg. ``cmake . && sudo make install`` for Chromaprint.)
+Debian/Ubuntu
++++++++++++++
+
+::
+
+    apt-get install python-dev libsnappy-dev libtool yasm libchromaprint-dev portaudio19-dev libboost-dev
+
+FFmpeg in Debian/Ubuntu is too old (lacks libswresample), so either do::
+
+    add-apt-repository ppa:jon-severinsson/ffmpeg
+    apt-get update
+    apt-get install libavformat-dev libswresample-dev
+    
+or install it from source.
+
+MacOSX
+++++++
+
+::
+
+    brew install portaudio
+    brew install ffmpeg
+    brew install chromaprint
+
+Other notes
++++++++++++
+
+`Chromaprint <http://acoustid.org/chromaprint>`_ depends on FFmpeg, so if you have a custom FFmpeg install, you might also want to install that manually. ``./configure && make && sudo make install`` should work for FFmpeg and PortAudio. You might also want to use ``--enable-shared`` for FFmpeg. ``cmake . && sudo make install`` for Chromaprint.)
+
+Building
+++++++++
 
 Then call ``python setup.py build`` or ``./compile.py`` to build the Python modules (it will build the Python module ``musicplayer.so``).
 
