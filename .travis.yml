@@ -6,11 +6,12 @@ compiler:
 # to have extra handling just for GCC.
 
 # Travis' Boost is too old (1.46 I think; it misses boost/atomic.hpp).
+# We need at least >=1.55. smart_ptr/intrusive_ref_counter.hpp doesn't exist in older ones.
 # Thus, install a newer one:
 before_install:
- - wget http://sourceforge.net/projects/boost/files/boost/1.54.0/boost_1_54_0.tar.bz2
- - tar --bzip2 -xf boost_1_54_0.tar.bz2
- - cd boost_1_54_0
+ - wget http://sourceforge.net/projects/boost/files/boost/1.55.0/boost_1_55_0.tar.bz2
+ - tar --bzip2 -xf boost_1_55_0.tar.bz2
+ - cd boost_1_55_0
  - ./bootstrap.sh --help
 # We only need atomic (and also only header-only).
 # All the rest takes way too much time to compile.
