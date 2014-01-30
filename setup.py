@@ -6,7 +6,7 @@ import time
 
 mod = Extension(
 	'musicplayer',
-	sources = glob("musicplayer*.cpp"),
+	sources = glob("*.cpp"),
 	depends = glob("*.h") + glob("*.hpp"),
 	extra_compile_args = ["--std=c++11"],
 	undef_macros = ['NDEBUG'],
