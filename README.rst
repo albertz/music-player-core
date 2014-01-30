@@ -98,6 +98,7 @@ It has the following functionality:
 * Provides a way to calculate a visual thumbnail for a song which shows the amplitude and the spectral centroid of the frequencies per time (see ``pyCalcBitmapThumbnail``). Inspired by `this project <https://github.com/endolith/freesound-thumbnailer/>`_.
 * `Gapless playback <http://en.wikipedia.org/wiki/Gapless_playback>`_
 
+
 Installation
 ============
 
@@ -142,6 +143,10 @@ Building
 ++++++++
 
 Then call ``python setup.py build`` or ``./compile.py`` to build the Python modules (it will build the Python module ``musicplayer.so``).
+
+The module is also registered `on PyPI <https://pypi.python.org/pypi/musicplayer>`, so you can also install via::
+
+	easy_install musicplayer
 
 
 Similar projects
