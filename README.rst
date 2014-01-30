@@ -83,27 +83,20 @@ It provides a player object which represents the player. It needs a generator `p
 
 It has the following functionality:
 
+* open source (simplified BSD license, see `License.txt <https://github.com/albertz/music-player-core/blob/master/License.txt>`_)
+* very simple interface
+* support of most important sound formats (MP3, Flac, Ogg Vorbis, WMA, AAC / ALAC m4a, ...)
+
 * Plays audio data via the player object. Uses `FFmpeg <http://ffmpeg.org/>`_ for decoding and `PortAudio <http://www.portaudio.com/>`_ for playing.
 * Of course, the decoding and playback is done in seperate threads. You can read about that `here <http://sourceforge.net/p/az-music-player/blog/2014/01/improving-the-audio-callback-removing-audio-glitches/>`_.
 * Supports any sample rate via ``player.outSamplerate``. The preferred sound device is set via ``player.preferredSoundDevice``. Get a list of all sound devices via ``getSoundDevices()``.
 * Can modify the volume via ``player.volume`` and also ``song.gain`` (see source code for details).
 * Prevents clipping via a smooth limiting functions which still leaves most sounds unaffected and keeps the dynamic range (see ``smoothClip``).
-* Can calculate the `ReplayGain <http://www.replaygain.org/>`_ value for a song (see ``pyCalcReplayGain``). This is as far as I know the only other implementation of ReplayGain despite the original from `mp3gain <http://mp3gain.sourceforge.net/>`_ (`gain_analysis.c <http://mp3gain.cvs.sourceforge.net/viewvc/mp3gain/mp3gain/gain_analysis.c?view=markup>`_).
-* Can calculate the `AcoustId <http://acoustid.org/>`_ audio fingerprint (see ``pyCalcAcoustIdFingerprint``). This one is also used by `MusicBrainz <http://musicbrainz.org/>`_. It uses the `Chromaprint <http://acoustid.org/chromaprint>`_ lib for implementation.
+* `ReplayGain <http://www.replaygain.org/>`_ (for audio volume normalization) (see ``pyCalcReplayGain``). This is as far as I know the only other implementation of ReplayGain despite the original from `mp3gain <http://mp3gain.sourceforge.net/>`_ (`gain_analysis.c <http://mp3gain.cvs.sourceforge.net/viewvc/mp3gain/mp3gain/gain_analysis.c?view=markup>`_).
+* `AcoustId <http://acoustid.org/>`_ audio fingerprint (see ``pyCalcAcoustIdFingerprint``). This one is also used by `MusicBrainz <http://musicbrainz.org/>`_. It uses the `Chromaprint <http://acoustid.org/chromaprint>`_ lib for implementation.
 * Provides a simple way to access the song metadata.
 * Provides a way to calculate a visual thumbnail for a song which shows the amplitude and the spectral centroid of the frequencies per time (see ``pyCalcBitmapThumbnail``). Inspired by `this project <https://github.com/endolith/freesound-thumbnailer/>`_.
-
-
-Features
-========
-
-* open source (simplified BSD license, see `License.txt <https://github.com/albertz/music-player-core/blob/master/License.txt>`_)
-* very simple interface
-* support of most important sound formats (MP3, Flac, Ogg Vorbis, WMA, AAC / ALAC m4a, ...)
-* ReplayGain / audio volume normalization
-* `AcoustID <http://acoustid.org>`_ fingerprint (for e.g. `MusicBrainz <http://musicbrainz.org/>`_)
 * `Gapless playback <http://en.wikipedia.org/wiki/Gapless_playback>`_
-
 
 Installation
 ============
