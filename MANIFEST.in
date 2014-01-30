@@ -1,6 +1,3 @@
 include *.txt
 include *.rst
 include *.md
-include *.hpp
-include *.h
-include *.cpp
