@@ -7,7 +7,7 @@ This Python module provides a high-level core Music player interface where you a
 Example
 =======
 
-A very simple player:
+A very simple player with gapless playback:
 
 .. code-block:: python
 
