@@ -2,6 +2,7 @@
 
 from distutils.core import setup, Extension
 from glob import glob
+import time
 
 mod = Extension(
 	'musicplayer',
@@ -19,7 +20,7 @@ mod = Extension(
 
 setup(
 	name = 'musicplayer',
-	version = '0.8',
+	version = time.strftime("1.%Y%m%d.%H%M%S", time.gmtime()),
 	description = 'Music player core Python module',
 	author = 'Albert Zeyer',
 	author_email = 'albzey@gmail.com',
