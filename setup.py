@@ -25,7 +25,7 @@ setup(
 	author_email = 'albzey@gmail.com',
 	url = 'https://github.com/albertz/music-player-core',
 	license = '2-clause BSD license',
-	long_description = open('README.md').read(),
+	long_description = open('README.rst').read(),
 	ext_modules = [mod]
 )
 
