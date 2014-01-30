@@ -28,7 +28,7 @@ install:
   - sudo apt-get install python-dev libsnappy-dev libtool
   - sudo apt-get install yasm libchromaprint-dev portaudio19-dev libboost-dev
 # For FFmpeg, we need a custom PPA because it's too old otherwise.
-  - sudo add-apt-repository ppa:jon-severinsson/ffmpeg
+  - sudo add-apt-repository ppa:jon-severinsson/ffmpeg -y
   - sudo apt-get update
   - sudo apt-get install libavformat-dev libswresample-dev
 
