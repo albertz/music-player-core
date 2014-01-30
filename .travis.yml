@@ -2,7 +2,19 @@ language: cpp
 
 compiler:
   - clang
-  - gcc
+# No GCC atm because gcc 4.6 doesn't know about "--std=c++11" and I dont want
+# to have extra handling just for GCC.
+
+# Travis' Boost is too old (1.46 I think; it misses boost/atomic.hpp).
+# Thus, install a newer one:
+before_install:
+ - wget http://sourceforge.net/projects/boost/files/boost/1.54.0/boost_1_54_0.tar.bz2
+ - tar --bzip2 -xf boost_1_54_0.tar.bz2
+ - cd boost_1_54_0
+ - ./bootstrap.sh --help
+ - sudo ./bootstrap.sh
+ - sudo ./b2 install
+ - cd ..
 
 install:
   - sudo apt-get update
