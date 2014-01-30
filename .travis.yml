@@ -6,7 +6,8 @@ compiler:
 
 install:
   - sudo apt-get update
-  - sudo apt-get install python-dev libsnappy-dev libtool yasm libchromaprint-dev portaudio19-dev libboost-dev
+  - sudo apt-get install python-dev libsnappy-dev libtool
+  - sudo apt-get install yasm libchromaprint-dev portaudio19-dev libboost-dev
   - sudo apt-get install libavformat-dev
 
 script:
