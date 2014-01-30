@@ -110,9 +110,9 @@ Installation
 
 To get the source working, you need these requirements:
 
-* boost
-* ffmpeg (including libswresample)
-* portaudio
+* boost >=1.55.0
+* ffmpeg >= 2.0 (including libswresample)
+* portaudio >=v19
 * chromaprint
 
 Debian/Ubuntu
