@@ -1,3 +1,5 @@
 include *.txt
 include *.rst
 include *.md
+include *.h
+include *.hpp
