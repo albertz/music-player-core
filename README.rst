@@ -101,8 +101,9 @@ It has the following functionality:
 Installation
 ============
 
-To get the source working, you need these requirements (e.g. install on MacOSX via Homebrew):
+To get the source working, you need these requirements:
 
+* boost
 * ffmpeg (including libswresample)
 * portaudio
 * chromaprint
@@ -127,9 +128,10 @@ MacOSX
 
 ::
 
-    brew install portaudio
-    brew install ffmpeg
-    brew install chromaprint
+	brew install boost	
+	brew install portaudio
+	brew install ffmpeg
+	brew install chromaprint
 
 Other notes
 +++++++++++
