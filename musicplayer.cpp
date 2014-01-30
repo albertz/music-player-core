@@ -5,7 +5,7 @@
 // This code is under the 2-clause BSD license, see License.txt in the root directory of this project.
 
 // compile:
-// gcc -c musicplayer*.{c,cpp} -I /System/Library/Frameworks/Python.framework/Headers/
+// gcc -c musicplayer*.cpp -I /System/Library/Frameworks/Python.framework/Headers/
 // libtool -dynamic -o musicplayer.so musicplayer*.o -framework Python -lavformat -lavutil -lavcodec -lswresample -lportaudio -lc
 
 // loosely based on ffplay.c
