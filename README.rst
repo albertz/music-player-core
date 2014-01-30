@@ -154,7 +154,7 @@ The module is also registered `on PyPI <https://pypi.python.org/pypi/musicplayer
 
 	easy_install musicplayer
 
-[![Build Status](https://travis-ci.org/albertz/music-player-core.png)](https://travis-ci.org/albertz/music-player-core)
+.. image:: https://travis-ci.org/albertz/music-player-core.png   :target: https://travis-ci.org/albertz/music-player-core
 
 
 Similar projects
