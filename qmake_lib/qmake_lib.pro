@@ -24,11 +24,6 @@ CONFIG -= qt
 QMAKE_CXXFLAGS += -std=c++11
 
 mac {
-	QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.6
-	QMAKE_CXXFLAGS += -isysroot /Developer/SDKs/MacOSX10.7.sdk
-	QMAKE_CXXFLAGS += -mmacosx-version-min=10.6
-	QMAKE_CXXFLAGS += -g
-
 	INCLUDEPATH += ../external/ffmpeg/target/include
 	INCLUDEPATH += ../external/portaudio/include
 	INCLUDEPATH += ../chromaprint
