@@ -5,4 +5,4 @@
 
 TEMPLATE = subdirs
 
-SUBDIRS = qmake-lib
+SUBDIRS = qmake_lib

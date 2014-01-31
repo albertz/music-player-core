@@ -15,9 +15,9 @@ TEMPLATE = lib
 QMAKE_EXTENSION_SHLIB = so
 TARGET = musicplayer
 
-SOURCES = $$files(*.cpp)
-HEADERS = $$files(*.h)
-HEADERS += $$files(*.hpp)
+SOURCES = $$files(../*.cpp)
+HEADERS = $$files(../*.h)
+HEADERS += $$files(../*.hpp)
 
 CONFIG += thread
 CONFIG -= qt
@@ -29,11 +29,11 @@ mac {
 	QMAKE_CXXFLAGS += -mmacosx-version-min=10.6
 	QMAKE_CXXFLAGS += -g
 
-	INCLUDEPATH += external/ffmpeg/target/include
-	INCLUDEPATH += external/portaudio/include
-	INCLUDEPATH += chromaprint
-	INCLUDEPATH += ../python-embedded/CPython/Include
-	INCLUDEPATH += ../python-embedded/pylib
+	INCLUDEPATH += ../external/ffmpeg/target/include
+	INCLUDEPATH += ../external/portaudio/include
+	INCLUDEPATH += ../chromaprint
+	INCLUDEPATH += ../../python-embedded/CPython/Include
+	INCLUDEPATH += ../../python-embedded/pylib
 	INCLUDEPATH += /usr/local/include
 
 	# We don't link against Python. (and the other libs atm)
