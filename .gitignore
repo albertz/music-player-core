@@ -21,3 +21,6 @@ xcshareddata
 # Python distutils
 /MANIFEST
 /dist
+
+# automatically created (e.g. via qmake)
+Makefile
