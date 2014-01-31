@@ -21,5 +21,5 @@ mac {
 	# We link against our own portaudio and chromaprint.
 	SUBDIRS += portaudio chromaprint
 	portaudio.subdir = external/portaudio
-	qmake_lib.depends = portaudio chromaprint
+	lib.depends = portaudio chromaprint
 }
