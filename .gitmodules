@@ -1,6 +1,8 @@
 [submodule "external/ffmpeg"]
 	path = external/ffmpeg
 	url = https://github.com/albertz/ffmpeg-static.git
+	branch = master
 [submodule "external/portaudio"]
 	path = external/portaudio
 	url = https://github.com/albertz/portaudio.git
+	branch = master
