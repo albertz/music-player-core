@@ -171,7 +171,7 @@ public:
 	}
 
 	~LinkedList() {
-		clear();
+		_releaseMain(main);
 	}
 
 	// The iterator itself is not thread-safe, i.e. you can't access
