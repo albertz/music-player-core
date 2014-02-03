@@ -109,11 +109,10 @@ CFLAGS = os.environ.get("CFLAGS", "").split()
 CFLAGS += ["-fpic"]
 
 def cc_single(infile, options):
+	options = list(options)
 	ext = os.path.splitext(infile)[1]
 	if ext in [".cpp", ".mm"]:
 		options += ["-std=c++11"]
-	if ext in [".m", ".mm"]:
-		options += ["-fobjc-arc"]
 
 	outfilename = get_cc_outfilename(infile)
 	depfilename = get_depfilename(outfilename)
