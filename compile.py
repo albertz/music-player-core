@@ -16,6 +16,8 @@ os.chdir("build")
 
 staticChromaprint = False
 
+print("* Building musicplayer.so")
+
 ffmpegFiles = \
 	glob("../*.cpp") + \
 	(glob("../chromaprint/*.cpp") if staticChromaprint else [])

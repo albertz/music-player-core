@@ -22,7 +22,14 @@ def is_uptodate(outfile, depfiles=None):
 	return True
 
 def get_cc_outfilename(infile):
-	return os.path.splitext(os.path.basename(infile))[0] + ".o"
+	# Kind of custom, not totally bullet-proof, but it's ok
+	# for our most common input, like "../musicplayer.cpp".
+	fn = os.path.splitext(infile)[0]
+	if fn.startswith("../"): fn = fn[3:]
+	else: fn = "++" + fn
+	fn = fn.replace("/", "+_")
+	fn = fn.replace("..", "+.")
+	return fn + ".o"
 
 def get_depfilename(outfile):
 	return outfile + ".deps"
@@ -102,8 +109,11 @@ CFLAGS = os.environ.get("CFLAGS", "").split()
 CFLAGS += ["-fpic"]
 
 def cc_single(infile, options):
-	if os.path.splitext(infile)[1] == ".cpp":
+	ext = os.path.splitext(infile)[1]
+	if ext in [".cpp", ".mm"]:
 		options += ["-std=c++11"]
+	if ext in [".m", ".mm"]:
+		options += ["-fobjc-arc"]
 
 	outfilename = get_cc_outfilename(infile)
 	depfilename = get_depfilename(outfilename)
