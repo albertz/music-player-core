@@ -25,3 +25,4 @@ xcshareddata
 
 # automatically created (e.g. via qmake)
 Makefile
+Makefile.*
