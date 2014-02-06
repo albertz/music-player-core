@@ -8,7 +8,13 @@ try:
 	better_exchook.install()
 except ImportError: pass # doesnt matter
 
-import musicplayer
+try:
+	import musicplayer
+except ImportError:
+	# Either in core-root or in musicplayer-root.
+	sys.path += ["..", "../.."]
+	import musicplayer
+#print "Module:", musicplayer.__file__
 
 # ffmpeg log levels: {0:panic, 8:fatal, 16:error, 24:warning, 32:info, 40:verbose}
 musicplayer.setFfmpegLogLevel(20)
