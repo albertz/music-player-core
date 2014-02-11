@@ -2,7 +2,7 @@
 
 from distutils.core import setup, Extension
 from glob import glob
-import time
+import time, sys
 
 mod = Extension(
 	'musicplayer',
@@ -19,6 +19,18 @@ mod = Extension(
 		'chromaprint'
 		]
 	)
+
+# Add some more include/lib paths.
+# Note: This should probably cover already a lot of cases.
+# However, if this is not enough, get some more inspiration from here:
+#   https://github.com/python-imaging/Pillow/blob/master/setup.py
+def addPrefix(prefix):
+	mod.include_dirs += [prefix + "/include"]
+	mod.library_dirs += [prefix + "/lib"]
+addPrefix("/usr/local")
+addPrefix("/opt/local") # e.g. MacPorts
+if sys.platform == "darwin": addPrefix("/sw") # fink dir
+
 
 setup(
 	name = 'musicplayer',
