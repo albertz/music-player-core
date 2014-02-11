@@ -14,6 +14,7 @@
 
 /* Some confusion about Python functions and their reference counting:
  
+ PyObject_SetAttrString: increments ref on value
  PyObject_GetAttrString: returns new reference!
  PyDict_SetItem: increments reference on key and value!
  PyDict_SetItemString: increments reference on value!
@@ -236,6 +237,13 @@ int PyDict_SetItemString_retain(PyObject* dict, const char* key, PyObject* value
 	return ret;
 }
 
+static inline
+int PyObject_SetAttrString_retain(PyObject* obj, const char* key, PyObject* value) {
+	if(!value) return -1;
+	int ret = PyObject_SetAttrString(obj, key, value);
+	Py_DECREF(value);
+	return ret;
+}
 
 #ifdef __cplusplus
 }
