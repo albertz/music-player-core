@@ -8,7 +8,7 @@ mod = Extension(
 	'musicplayer',
 	sources = glob("*.cpp"),
 	depends = glob("*.h") + glob("*.hpp"),
-	extra_compile_args = ["--std=c++11"],
+	extra_compile_args = ["-std=c++11"],
 	undef_macros = ['NDEBUG'],
 	libraries = [
 		'avutil',
