@@ -55,6 +55,8 @@ import sys
 files = sys.argv[1:] + files
 import os
 files = map(os.path.expanduser, files)
+files = filter(os.path.exists, files)
+assert files, "give me some files"
 i = 0
 
 def songs():
