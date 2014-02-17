@@ -31,7 +31,14 @@ mac {
 	INCLUDEPATH += ../../python-embedded/pylib
 	INCLUDEPATH += /usr/local/include
 
-	# We don't link against Python. (and the other libs atm)
+	# Link against the dylibs.
+	QMAKE_LFLAGS += -L../external/ffmpeg/target/lib
+	QMAKE_LFLAGS += -lavformat -lavutil -lavcodec -lswresample
+
+	# Link against the static libs.
+	QMAKE_LFLAGS += -L $$DESTDIR -lchromaprint -lportaudio
+
+	# We don't link against Python.
 	QMAKE_LFLAGS += -undefined dynamic_lookup
 }
 
