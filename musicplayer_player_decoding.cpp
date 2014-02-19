@@ -20,6 +20,7 @@ extern "C" {
 
 #include <math.h>
 #include <unistd.h>
+#include <dlfcn.h>
 #include <vector>
 #include <set>
 
@@ -1410,16 +1411,47 @@ static bool loopFrame(PlayerObject* player) {
 	return didSomething;
 }
 
+
+
+// The following three functions are at the moment defined in the main application.
+// If we don't find them, don't care and just ignore.
+
+static void ThreadHangDetector_registerCurThread(const char* threadName, float timeoutSecs) {
+	typedef void Handler(const char*, float);
+	static Handler* handler = (Handler*) dlsym(RTLD_DEFAULT, "ThreadHangDetector_registerCurThread");
+	if(!handler) return;
+	handler(threadName, timeoutSecs);
+}
+
+static void ThreadHangDetector_lifeSignalCurThread() {
+	typedef void Handler();
+	static Handler* handler = (Handler*) dlsym(RTLD_DEFAULT, "ThreadHangDetector_lifeSignalCurThread");
+	if(!handler) return;
+	handler();
+}
+
+static void ThreadHangDetector_unregisterCurThread() {
+	typedef void Handler();
+	static Handler* handler = (Handler*) dlsym(RTLD_DEFAULT, "ThreadHangDetector_unregisterCurThread");
+	if(!handler) return;
+	handler();
+}
+
+
 void PlayerObject::workerProc(boost::atomic<bool>& stopSignal) {
-	setCurThreadName("worker");
+	setCurThreadName("musicplayer.so worker");
+	ThreadHangDetector_registerCurThread("musicplayer.so worker", 5);
 	
 	while(true) {
-		if(stopSignal) return;
+		if(stopSignal) break;
 		
 		bool didSomething = loopFrame(this);
+		ThreadHangDetector_lifeSignalCurThread();
 		if(!didSomething)
 			usleep(1000);
 	}
+	
+	ThreadHangDetector_unregisterCurThread();
 }
 
 void PlayerObject::startWorkerThread() {
