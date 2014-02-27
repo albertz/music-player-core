@@ -116,7 +116,7 @@ const char* getStackSymbol(void* pt) { return "?"; }
 PyMutex::PyMutex() {
 	mlock(this, sizeof(*this));
 	l = PyThread_allocate_lock();
-	mlock(l, sizeof(*l));
+	mlock(l, sizeof(int) /* some minimum size */);
 	enabled = true;
 }
 
