@@ -1146,8 +1146,6 @@ static std::vector<PeekItem> queryPeekItems(PlayerObject* player) {
 		peekItems.push_back(item);
 	}
 
-	return peekItems;
-
 final:
 	// pass through any Python errors
 	if(PyErr_Occurred())
@@ -1157,7 +1155,7 @@ final:
 	Py_XDECREF(peekListIter);
 	Py_XDECREF(peekList);
 	Py_XDECREF(args);
-	return std::vector<PeekItem>();
+	return peekItems;
 }
 
 
