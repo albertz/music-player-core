@@ -1171,7 +1171,23 @@ void PlayerObject::openPeekInStreams() {
 	pyQueueLock = true;
 	
 	std::vector<PeekItem> peekItems = queryPeekItems(player);
-
+	struct CleanupPeekItems {
+		std::vector<PeekItem>& peekItems;
+		CleanupPeekItems(std::vector<PeekItem>& v) : peekItems(v) {}
+		~CleanupPeekItems() {
+			PyScopedGIL gstate;
+			
+			for(PeekItem& it : peekItems) {
+				Py_XDECREF(it.song);
+			}
+			
+			// pass through any Python errors
+			if(PyErr_Occurred())
+				PyErr_Print();
+		}
+	}
+	cleanupPeekItems(peekItems);
+	
 	// Start after the first item. The first item is the currently played song.
 	PlayerObject::InStreams::ItemPtr startAfter = player->inStreams.mainLink()->next;
 	
@@ -1253,18 +1269,6 @@ void PlayerObject::openPeekInStreams() {
 	}
 	
 	pyQueueLock = false;
-
-	{
-		PyScopedGIL gstate;
-
-		for(PeekItem& it : peekItems) {
-			Py_DECREF(it.song);
-		}
-
-		// pass through any Python errors
-		if(PyErr_Occurred())
-			PyErr_Print();
-	}
 }
 
 bool PlayerObject::tryOvertakePeekInStream() {
