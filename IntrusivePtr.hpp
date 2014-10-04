@@ -3,7 +3,10 @@
 
 #include <boost/atomic.hpp>
 
-// boost::intrusive_ptr but safe/atomic
+// boost::intrusive_ptr but safe/atomic.
+// I.e. pointer to an object with an embedded reference count.
+// intrusive_ptr_add_ref(T*) and intrusive_ptr_release(T*) must be declared.
+// You can also derive from boost::intrusive_ref_counter.
 
 template<typename T>
 struct IntrusivePtr {
