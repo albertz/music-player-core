@@ -706,6 +706,23 @@ success:
 			}
 		}
 		// TODO: maybe alternatively try to read gain from metatags?
+
+		if(PyObject_HasAttrString(song, "startOffset")) {
+			PyObject* obj = PyObject_GetAttrString(song, "startOffset");
+			if(obj) {
+				double pos = 0;
+				if(!PyArg_Parse(obj, "d", &pos))
+					printf("(%s) song.startOffset is not a double\n", debugName.c_str());
+				else
+					seekAbs(pos);
+				Py_DECREF(obj);
+			}
+			else {
+				// strange. reset any errors...
+				if(PyErr_Occurred())
+					PyErr_Print();
+			}
+		}
 	}
 	
 final:
