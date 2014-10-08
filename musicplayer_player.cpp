@@ -261,7 +261,8 @@ void PlayerObject::setAudioTgt(int samplerate, int numchannels) {
 	// reset the outstream (PortAudio). we must force a reopen.
 	this->outStream.reset();
 
-	// we must reopen the output stream
+	// We must refill the buffers. The samplerate conversion will
+	// happen on-the-fly in audio_decode_frame().
 	this->resetBuffers();
 }
 
