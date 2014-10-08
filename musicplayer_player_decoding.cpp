@@ -292,8 +292,8 @@ void PlayerObject::resetBuffers() {
 
 	for(PlayerInStream& is : inStreams) {
 		PyScopedLock lock(is.lock);
-		is.seekAbs(0); // bad otherwise
-	}	
+		is.seekAbs(is.playerTimePos); // simple way to reset
+	}
 }
 
 int PlayerObject::seekRel(double incr) {
