@@ -77,7 +77,7 @@ struct PlayerInStream : PlayerInStreamRawPOD {
 
 	bool open(PlayerObject* player, PyObject* song);
 	void resetBuffers();
-	void seekToStart();
+	void seekAbs(double pos);
 	
 	bool isOpened() {
 		return ctx != NULL;

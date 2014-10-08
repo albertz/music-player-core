@@ -252,22 +252,39 @@ void PlayerInStream::resetBuffers() {
 	player_resetStreamPackets(this);
 }
 
-void PlayerInStream::seekToStart() {
-	if(!playerStartedPlaying && playerTimePos == 0) return;
-	
+void PlayerInStream::seekAbs(double pos) {
 	resetBuffers();
 	playerStartedPlaying = false;
-	playerTimePos = readerTimePos = 0;
 	
-	int ret = avformat_seek_file(
-					   this->ctx, /*player->audio_stream*/ -1,
+	playerTimePos = readerTimePos = pos;
+	
+	bool seek_by_bytes = false;
+	if(timeLen <= 0)
+		seek_by_bytes = true;
+	int seek_flags = 0;
+	
+	if(seek_by_bytes) {
+		seek_flags |= AVSEEK_FLAG_BYTE;
+		if (ctx->bit_rate)
+			pos *= ctx->bit_rate / 8.0;
+		else
+			pos *= 180000.0;
+	}
+	else {
+		pos *= AV_TIME_BASE;
+	}
+	
+	int ret =
+	avformat_seek_file(
+					   ctx, /*player->audio_stream*/ -1,
 					   INT64_MIN,
-					   0, // pos
+					   (int64_t) pos,
 					   INT64_MAX,
-					   0 // flags
+					   seek_flags
 					   );
+
 	if(ret < 0)
-		printf("(%s) seekToStart: seek failed\n", debugName.c_str());
+		printf("(%s) seekAbs(%f): seek failed\n", debugName.c_str(), pos);
 }
 
 void PlayerObject::resetBuffers() {	
@@ -275,8 +292,7 @@ void PlayerObject::resetBuffers() {
 
 	for(PlayerInStream& is : inStreams) {
 		PyScopedLock lock(is.lock);
-		is.resetBuffers();
-		is.seekToStart(); // bad otherwise
+		is.seekAbs(0); // bad otherwise
 	}	
 }
 
@@ -348,35 +364,7 @@ int PlayerObject::seekAbs(double pos) {
 	PyScopedUnlock unlock(pl->lock);
 	{
 		PyScopedLock lock(is->lock);
-
-		is->resetBuffers();
-
-		is->playerTimePos = is->readerTimePos = pos;
-		
-		bool seek_by_bytes = false;
-		if(is->timeLen <= 0)
-			seek_by_bytes = true;
-		int seek_flags = 0;
-		
-		if(seek_by_bytes) {
-			seek_flags |= AVSEEK_FLAG_BYTE;
-			if (is->ctx->bit_rate)
-				pos *= is->ctx->bit_rate / 8.0;
-			else
-				pos *= 180000.0;
-		}
-		else {
-			pos *= AV_TIME_BASE;
-		}
-		
-		ret =
-		avformat_seek_file(
-						   is->ctx, /*player->audio_stream*/ -1,
-						   INT64_MIN,
-						   (int64_t) pos,
-						   INT64_MAX,
-						   seek_flags
-						   );
+		is->seekAbs(pos);
 	}
 	
 	isptr.reset(); // must be reset in unlocked scope
