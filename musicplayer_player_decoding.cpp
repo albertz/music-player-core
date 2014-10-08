@@ -350,17 +350,16 @@ int PlayerObject::seekAbs(double pos) {
 		PyScopedLock lock(is->lock);
 
 		is->resetBuffers();
-		
-		int seek_by_bytes = 0;
-		if(is->timeLen <= 0)
-			seek_by_bytes = 1;
-		
-		is->playerTimePos = is->readerTimePos = pos;
 
+		is->playerTimePos = is->readerTimePos = pos;
+		
+		bool seek_by_bytes = false;
+		if(is->timeLen <= 0)
+			seek_by_bytes = true;
 		int seek_flags = 0;
-		if(seek_by_bytes) seek_flags |= AVSEEK_FLAG_BYTE;
 		
 		if(seek_by_bytes) {
+			seek_flags |= AVSEEK_FLAG_BYTE;
 			if (is->ctx->bit_rate)
 				pos *= is->ctx->bit_rate / 8.0;
 			else
