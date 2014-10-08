@@ -705,7 +705,7 @@ success:
 					PyErr_Print();
 			}
 		}
-		// TODO: maybe alternatively try to read from metatags?
+		// TODO: maybe alternatively try to read gain from metatags?
 	}
 	
 final:
