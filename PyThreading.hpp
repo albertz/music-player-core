@@ -35,7 +35,17 @@ struct PyScopedUnlock : boost::noncopyable {
 struct PyScopedGIL : boost::noncopyable {
 	PyGILState_STATE gstate;
 	PyScopedGIL() { gstate = PyGILState_Ensure(); }
-	~PyScopedGIL() { PyGILState_Release(gstate); }
+	~PyScopedGIL() {
+		if(PyThreadState_Get()->gilstate_counter == 1) {
+			// This means that the thread-state is going to be deleted.
+			// This can happen when you created this thread state on a new
+			// thread which was not registered in Python before.
+			if(PyErr_Occurred())
+				// Print exception. It would get lost otherwise.
+				PyErr_Print();
+		}
+		PyGILState_Release(gstate);
+	}
 };
 
 struct PyScopedGIUnlock : boost::noncopyable {
