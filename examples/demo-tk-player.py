@@ -1,6 +1,12 @@
 #!/usr/bin/env python2
 
-import musicplayer, sys, os, fnmatch, random, pprint, Tkinter
+import sys, os, fnmatch, random, pprint, Tkinter
+
+# Our parent path might contain a self-build musicplayer module. Use that one.
+sys.path = [os.path.abspath(os.path.dirname(__file__) + "/..")] + sys.path
+
+import musicplayer
+print "Module:", musicplayer.__file__
 
 class Song:
 	def __init__(self, fn):

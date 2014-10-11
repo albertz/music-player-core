@@ -5,21 +5,19 @@
 
 import sys, os, random, fnmatch
 
+# Our parent path might contain a self-build musicplayer module. Use that one.
+sys.path = [os.path.abspath(os.path.dirname(__file__) + "/..")] + sys.path
+
+import musicplayer
+print "Module:", musicplayer.__file__
+
+# ffmpeg log levels: {0:panic, 8:fatal, 16:error, 24:warning, 32:info, 40:verbose}
+musicplayer.setFfmpegLogLevel(20)
+
 try:
 	import better_exchook
 	better_exchook.install()
 except ImportError: pass # doesnt matter
-
-try:
-	import musicplayer
-except ImportError:
-	# Either in core-root or in musicplayer-root.
-	sys.path += ["..", "../.."]
-	import musicplayer
-#print "Module:", musicplayer.__file__
-
-# ffmpeg log levels: {0:panic, 8:fatal, 16:error, 24:warning, 32:info, 40:verbose}
-musicplayer.setFfmpegLogLevel(20)
 
 try:
 	import faulthandler
