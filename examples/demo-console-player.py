@@ -94,29 +94,22 @@ def prepareStdin():
 		new = termios.tcgetattr(fd)
 		new[3] = new[3] & ~termios.ICANON & ~termios.ECHO
 		# http://www.unixguide.net/unix/programming/3.6.2.shtml
-		#new[6] [termios.VMIN] = 1
-		#new[6] [termios.VTIME] = 0
-		new[6] [termios.VMIN] = 0
-		#timeout *= 10 # 10ths of second
-		#if timeout > 0 and timeout < 1: timeout = 1
-		timeout = 1
-		new[6] [termios.VTIME] = timeout
+		new[6][termios.VMIN] = 0
+		new[6][termios.VTIME] = 1
 		
 		termios.tcsetattr(fd, termios.TCSANOW, new)
-		termios.tcsendbreak(fd,0)
+		termios.tcsendbreak(fd, 0)
 
 		import atexit
 		atexit.register(lambda: termios.tcsetattr(fd, termios.TCSANOW, old))	
 
-def getchar(timeout = 0):
+def getchar():
 	fd = sys.stdin.fileno()
-	ch = os.read(fd,7)
-	return(ch)
+	ch = os.read(fd, 7)
+	return ch
 
 prepareStdin()
 
-import time
-#sys.stdout.write("\n")
 while True:
 	sys.stdout.write("\r\033[K") # clear line
 	if player.playing: sys.stdout.write("playing, ")
@@ -132,9 +125,7 @@ while True:
 	else:
 		sys.stdout.write("no song")
 	
-	# time.sleep(0.05)
-	ch = getchar(0.1)
-	#sys.stdout.write(" " + repr(ch))
+	ch = getchar()
 	if ch == "\x1b[D": # left
 		player.seekRel(-10)
 	elif ch == "\x1b[C": #right
