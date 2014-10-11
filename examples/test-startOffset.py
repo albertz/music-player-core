@@ -59,15 +59,27 @@ player.peekQueue = peekSongs
 # Setup a simple GUI.
 window = Tkinter.Tk()
 window.title("Music Player")
+songName = Tkinter.StringVar()
+songTime = Tkinter.StringVar()
 songLabel = Tkinter.StringVar()
 
-def onSongChange(**kwargs): songLabel.set(pprint.pformat(player.curSongMetadata))
+def onSongChange(**kwargs):
+	songName.set(os.path.basename(player.curSong.url))
+	songLabel.set(pprint.pformat(player.curSongMetadata))
 def cmdPlayPause(*args): player.playing = not player.playing
 def cmdNext(*args): player.nextSong()
 
+def refreshTime():
+	songTime.set("Time: %.1f / %.1f" % (player.curSongPos or -1, player.curSongLen or -1))
+	window.after(10, refreshTime) # every 10ms
+
+Tkinter.Label(window, textvariable=songName).pack()
+Tkinter.Label(window, textvariable=songTime).pack()
 Tkinter.Label(window, textvariable=songLabel).pack()
 Tkinter.Button(window, text="Play/Pause", command=cmdPlayPause).pack()
 Tkinter.Button(window, text="Next", command=cmdNext).pack()
+
+refreshTime()
 
 player.onSongChange = onSongChange
 player.playing = True # start playing
