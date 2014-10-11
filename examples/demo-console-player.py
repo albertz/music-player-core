@@ -3,6 +3,8 @@
 # All rights reserved.
 # This code is under the 2-clause BSD license, see License.txt in the root directory of this project.
 
+import sys, os, random, fnmatch
+
 try:
 	import better_exchook
 	better_exchook.install()
@@ -43,20 +45,18 @@ class Song:
 		#print "seekRaw", self, offset, whence, r, self.f.tell()
 		return self.f.tell()
 
-files = [
-	"~/Music/Classic/Glenn Gould Plays Bach/Two- & Three-Part Inventions - Gould/19 Bach - Invention 13 in a (BWV 784).mp3",
-	"~/Music/Rock/Tool/Lateralus/09 Lateralus.flac",
-	"~/Music/Special/zorba/(01) - Theme From Zorba The Greek.ogg",
-	"~/Music/Classic/Glenn Gould Plays Bach/French Suites, BWV812-7 - Gould/Bach, French Suite 5 in G, BWV816 - 5 Bourree.mp3",
-	"~/Music/Electronic/Von Paul Kalkbrenner - Aaron.mp3",
-	"~/Music/Electronic/One Day_Reckoning Song (Wankelmut Remix) - Asaf Avidan & the Mojos.mp3",
-]
-import sys
+files = []
+def getFiles(path):
+	for f in sorted(os.listdir(path), key=lambda k: random.random()):
+		f = os.path.join(path, f)
+		if os.path.isdir(f): getFiles(f) # recurse
+		if len(files) > 1000: break # break if we have enough
+		if fnmatch.fnmatch(f, '*.mp3'): files.append(f)
+getFiles(os.path.expanduser("~/Music"))
+random.shuffle(files) # shuffle some more
 files = sys.argv[1:] + files
-import os
-files = map(os.path.expanduser, files)
-files = filter(os.path.exists, files)
-assert files, "give me some files"
+assert files, "give me some files or fill-up ~/Music"
+
 i = 0
 
 def songs():
