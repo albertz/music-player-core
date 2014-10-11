@@ -67,7 +67,7 @@ def songs():
 def peekSongs(n):
 	nexti = i + 1
 	if nexti >= len(files): nexti = 0
-	return map(Song, files[nexti:] + files[:nexti])
+	return map(Song, (files[nexti:] + files[:nexti])[:n])
 
 player = musicplayer.createPlayer()
 player.outSamplerate = 48000
