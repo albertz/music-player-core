@@ -35,6 +35,7 @@ bool PlayerObject::getNextSong(bool skipped) {
 	bool errorOnOpening = false;
 	
 	PyObject* oldSong = player->curSong;
+	player->curSong = NULL;
 
 	{
 		PyScopedGIL gstate;
