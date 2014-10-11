@@ -260,29 +260,14 @@ void PlayerInStream::seekAbs(double pos) {
 	
 	playerTimePos = readerTimePos = pos;
 	
-	bool seek_by_bytes = false;
-	if(timeLen <= 0)
-		seek_by_bytes = true;
-	int seek_flags = 0;
-	
-	if(seek_by_bytes) {
-		seek_flags |= AVSEEK_FLAG_BYTE;
-		if (ctx->bit_rate)
-			pos *= ctx->bit_rate / 8.0;
-		else
-			pos *= 180000.0;
-	}
-	else {
-		pos *= AV_TIME_BASE;
-	}
-	
 	int ret =
 	avformat_seek_file(
-					   ctx, /*player->audio_stream*/ -1,
+					   ctx,
+					   -1, // stream
 					   INT64_MIN,
-					   (int64_t) pos,
+					   (int64_t) (pos * AV_TIME_BASE),
 					   INT64_MAX,
-					   seek_flags
+					   0 //flags
 					   );
 
 	if(ret < 0)
@@ -314,42 +299,23 @@ int PlayerObject::seekRel(double incr) {
 		
 		is->resetBuffers();
 		
-		double pos = 0;
-		/*
-		 int seek_by_bytes = 0;
-		if(seek_by_bytes) {
-			if (player->audio_stream >= 0 && player->audio_pkt.pos >= 0) {
-				pos = player->audio_pkt.pos;
-			} else
-				pos = avio_tell(player->ctx->pb);
-			if (player->ctx->bit_rate)
-				incr *= player->ctx->bit_rate / 8.0;
-			else
-				incr *= 180000.0;
-			pos += incr;
-		}
-		else*/ {
-			pos = is->playerTimePos;
-			pos += incr;
-			is->playerTimePos = is->readerTimePos = pos;
-			
-			pos *= AV_TIME_BASE;
-			incr *= AV_TIME_BASE;
-		}
+		double pos = is->playerTimePos;
+
+		pos += incr;
+		is->playerTimePos = is->readerTimePos = pos;
 		
-		int64_t seek_target = pos;
-		int64_t seek_min    = incr > 0 ? seek_target - incr + 2: INT64_MIN;
-		int64_t seek_max    = incr < 0 ? seek_target - incr - 2: INT64_MAX;
-		int seek_flags = 0;
-		//if(seek_by_bytes) seek_flags |= AVSEEK_FLAG_BYTE;
-			
+		int64_t seek_target = int64_t(pos * AV_TIME_BASE);
+		int64_t seek_min    = incr > 0 ? seek_target - int64_t(incr * AV_TIME_BASE) + 2: INT64_MIN;
+		int64_t seek_max    = incr < 0 ? seek_target - int64_t(incr * AV_TIME_BASE) - 2: INT64_MAX;
+		
 		ret =
 		avformat_seek_file(
-						   is->ctx, /*player->audio_stream*/ -1,
+						   is->ctx,
+						   -1, // stream
 						   seek_min,
 						   seek_target,
 						   seek_max,
-						   seek_flags
+						   0 // flags
 						   );
 	}
 
