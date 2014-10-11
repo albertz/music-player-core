@@ -25,6 +25,8 @@ def getFiles(path):
 		if fnmatch.fnmatch(f, '*.mp3'): files.append(f)
 getFiles(os.path.expanduser("~/Music"))
 random.shuffle(files) # shuffle some more
+files = sys.argv[1:] + files
+assert files, "give me some files or fill-up ~/Music"
 
 i = 0
 
