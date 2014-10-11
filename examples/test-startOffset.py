@@ -14,7 +14,7 @@ class Song:
 		self.f = open(fn)
 
 		# This is the test.
-		self.startOffset = 0
+		self.startOffset = 3.5
 
 	def __eq__(self, other):
 		return self.url == other.url
