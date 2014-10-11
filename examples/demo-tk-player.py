@@ -3,7 +3,7 @@
 import sys, os, fnmatch, random, pprint, Tkinter
 
 # Our parent path might contain a self-build musicplayer module. Use that one.
-sys.path = [os.path.abspath(os.path.dirname(__file__) + "/..")] + sys.path
+sys.path = [os.path.abspath((os.path.dirname(__file__) or ".") + "/..")] + sys.path
 
 import musicplayer
 print "Module:", musicplayer.__file__
