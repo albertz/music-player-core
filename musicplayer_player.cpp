@@ -50,8 +50,13 @@ bool PlayerObject::getNextSong(bool skipped) {
 		
 		PyObject* newSong = PyIter_Next(player->queue);
 		
-		if(!newSong || PyErr_Occurred()) { // pass through any Python errors
+		if(PyErr_Occurred()) { // pass through any Python errors
 			Py_XDECREF(newSong);
+			goto final;
+		}
+		
+		if(!newSong) {
+			PyErr_SetString(PyExc_RuntimeError, "player queue does not have more songs");		
 			goto final;
 		}
 		
