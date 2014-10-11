@@ -103,6 +103,12 @@ def prepareStdin():
 		import atexit
 		atexit.register(lambda: termios.tcsetattr(fd, termios.TCSANOW, old))	
 
+		print "Console control:"
+		print "  <space>:        play / pause"
+		print "  <left>/<right>: seek back/forward by 10 secs"
+		print "  <return>:       next song"
+		print "  <q>:            quit"
+
 def getchar():
 	fd = sys.stdin.fileno()
 	ch = os.read(fd, 7)
