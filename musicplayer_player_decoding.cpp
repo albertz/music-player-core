@@ -253,6 +253,8 @@ void PlayerInStream::resetBuffers() {
 }
 
 void PlayerInStream::seekAbs(double pos) {
+	// We expect to have the player lock and not the PyGIL.
+
 	resetBuffers();
 	playerStartedPlaying = false;
 	
@@ -297,6 +299,8 @@ void PlayerObject::resetBuffers() {
 }
 
 int PlayerObject::seekRel(double incr) {
+	// We expect to have the player lock and not the PyGIL.
+	
 	outOfSync = true;
 	PlayerObject* pl = this;
 	InStreams::ItemPtr isptr = pl->getInStream();
@@ -713,8 +717,10 @@ success:
 				double pos = 0;
 				if(!PyArg_Parse(obj, "d", &pos))
 					printf("(%s) song.startOffset is not a double\n", debugName.c_str());
-				else
+				else {
+					PyScopedGIUnlock gunlock;
 					seekAbs(pos);
+				}
 				Py_DECREF(obj);
 			}
 			else {
