@@ -123,8 +123,10 @@ while True:
 	else: sys.stdout.write("paused, ")
 	curSong = player.curSong
 	if curSong:
+		url = os.path.basename(curSong.url)
+		if len(url) > 40: url = url[:37] + "..."
 		sys.stdout.write(
-			os.path.basename(curSong.url) + " : " +
+			url + " : " +
 			formatTime(player.curSongPos) + " / " +
 			formatTime(player.curSongLen))
 	else:
