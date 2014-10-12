@@ -28,6 +28,7 @@ struct Buffer {
 	size_t size() { return _size; }
 	void clear() { _size = 0; chunks.clear(); }
 	bool empty() { return size() == 0; }
+	void resize_smaller(size_t newSize);
 
 	// returns amount of data returned, i.e. <= target_size
 	// single consumer supported

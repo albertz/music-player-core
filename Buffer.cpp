@@ -8,6 +8,30 @@
 Buffer::Chunk::Chunk() : start(0), end(0) { mlock(this, sizeof(*this)); }
 Buffer::Buffer() : _size(0) { mlock(this, sizeof(*this)); }
 
+void Buffer::resize_smaller(size_t newSize) {
+	assert(newSize <= _size);
+	_size = newSize;
+	
+	for(auto chunkPtr = chunks.back(); chunkPtr && chunkPtr->isData() && newSize > 0; ) {
+		Chunk& chunk = chunkPtr->value;
+		
+		if(newSize >= chunk.size()) {
+			newSize -= chunk.size();
+			auto prevChunkPtr = chunkPtr->getPrev();
+			chunkPtr->popOut();
+			chunkPtr = prevChunkPtr;
+			continue;
+		}
+		
+		chunk.end -= newSize;
+		assert(chunk.start <= chunk.end);
+		newSize = 0;
+		break;
+	}
+	
+	assert(newSize == 0);
+}
+
 size_t Buffer::pop(uint8_t* target, size_t target_size, bool doCleanup) {
 	size_t c = 0;
 	for(Chunk& chunk : chunks) {
