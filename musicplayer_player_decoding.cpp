@@ -255,22 +255,30 @@ void PlayerInStream::resetBuffers() {
 void PlayerInStream::seekAbs(double pos) {
 	// We expect to have the player lock and not the PyGIL.
 
+	if(pos < 0) pos = 0;
+	// No clever logic when we can omit this seek.
+	// We might also call it just to force a buffer reset.
+	
 	resetBuffers();
 	playerStartedPlaying = false;
 	
-	if(pos < 0) pos = 0;
+	double incr = playerTimePos - pos;
 	playerTimePos = readerTimePos = pos;
 	
 	int64_t seek_target = int64_t(pos * AV_TIME_BASE);
+	int64_t seek_min    = (incr > 0) ? (seek_target - int64_t(incr * AV_TIME_BASE) + 2) : 0;
+	int64_t seek_max    = (incr < 0) ? (seek_target - int64_t(incr * AV_TIME_BASE) - 2) : INT64_MAX;
 	if(seek_target < 0) seek_target = INT64_MAX;
+	if(seek_min < 0) seek_min = 0;
+	if(seek_max < 0) seek_max = INT64_MAX;
 	
 	int ret =
 	avformat_seek_file(
 					   ctx,
 					   -1, // stream
-					   0, // min_ts
+					   seek_min,
 					   seek_target,
-					   INT64_MAX,
+					   seek_max,
 					   0 //flags
 					   );
 
@@ -301,30 +309,7 @@ int PlayerObject::seekRel(double incr) {
 	{
 		PyScopedLock lock(is->lock);
 		
-		is->resetBuffers();
-		
-		double pos = is->playerTimePos;
-
-		pos += incr;
-		if(pos < 0) pos = 0;
-		is->playerTimePos = is->readerTimePos = pos;
-		
-		int64_t seek_target = int64_t(pos * AV_TIME_BASE);
-		int64_t seek_min    = (incr > 0) ? (seek_target - int64_t(incr * AV_TIME_BASE) + 2) : 0;
-		int64_t seek_max    = (incr < 0) ? (seek_target - int64_t(incr * AV_TIME_BASE) - 2) : INT64_MAX;
-		if(seek_target < 0) seek_target = INT64_MAX;
-		if(seek_min < 0) seek_min = 0;
-		if(seek_max < 0) seek_max = INT64_MAX;
-		
-		ret =
-		avformat_seek_file(
-						   is->ctx,
-						   -1, // stream
-						   seek_min,
-						   seek_target,
-						   seek_max,
-						   0 // flags
-						   );
+		is->seekAbs(is->playerTimePos + incr);
 	}
 
 	isptr.reset(); // must be reset in unlocked scope
