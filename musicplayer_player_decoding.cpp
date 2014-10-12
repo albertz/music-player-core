@@ -261,12 +261,15 @@ void PlayerInStream::seekAbs(double pos) {
 	if(pos < 0) pos = 0;
 	playerTimePos = readerTimePos = pos;
 	
+	int64_t seek_target = int64_t(pos * AV_TIME_BASE);
+	if(seek_target < 0) seek_target = INT64_MAX;
+	
 	int ret =
 	avformat_seek_file(
 					   ctx,
 					   -1, // stream
 					   0, // min_ts
-					   (int64_t) (pos * AV_TIME_BASE),
+					   seek_target,
 					   INT64_MAX,
 					   0 //flags
 					   );
@@ -307,8 +310,9 @@ int PlayerObject::seekRel(double incr) {
 		is->playerTimePos = is->readerTimePos = pos;
 		
 		int64_t seek_target = int64_t(pos * AV_TIME_BASE);
-		int64_t seek_min    = (incr > 0) ? seek_target - int64_t(incr * AV_TIME_BASE) + 2 : 0;
+		int64_t seek_min    = (incr > 0) ? (seek_target - int64_t(incr * AV_TIME_BASE) + 2) : 0;
 		int64_t seek_max    = (incr < 0) ? (seek_target - int64_t(incr * AV_TIME_BASE) - 2) : INT64_MAX;
+		if(seek_target < 0) seek_target = INT64_MAX;
 		if(seek_min < 0) seek_min = 0;
 		if(seek_max < 0) seek_max = INT64_MAX;
 		
