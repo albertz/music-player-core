@@ -1516,6 +1516,7 @@ bool PlayerObject::readOutStream(OUTSAMPLE_t* samples, size_t sampleNum, size_t*
 			// we can't do anything here, so break.
 			if(!is.readerHitEnd) break;
 
+			// The worker thread will switch to the next song.
 			is.playerHitEnd = true;
 		}
 	}
