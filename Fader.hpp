@@ -62,6 +62,9 @@ public:
 			if(inc < 0) return cur == 0;
 			assert(false); return false;
 		}
+		void resetZero() {
+			cur = 0;
+		}
 	};
 
 };

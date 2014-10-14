@@ -253,12 +253,12 @@ void PlayerInStream::resetBuffers() {
 }
 
 void PlayerInStream::seekAbs(double pos) {
-	// We expect to have the player lock and not the PyGIL.
+	// We expect to have the stream lock and not the PyGIL.
 
 	if(pos < 0) pos = 0;
+	
 	// No clever logic when we can omit this seek.
 	// We might also call it just to force a buffer reset.
-	
 	resetBuffers();
 	playerStartedPlaying = false;
 	
@@ -295,43 +295,34 @@ void PlayerObject::resetBuffers() {
 	}
 }
 
-int PlayerObject::seekRel(double incr) {
-	// We expect to have the player lock and not the PyGIL.
-	
+void PlayerObject::seekSong(double pos, bool relativePos) {
 	outOfSync = true;
 	PlayerObject* pl = this;
 	InStreams::ItemPtr isptr = pl->getInStream();
-	if(!isptr.get()) return -1;
+	if(!isptr.get()) return;
 	PlayerInStream* is = &isptr->value;
-	int ret = -1;
 	
 	PyScopedUnlock unlock(pl->lock);
 	{
 		PyScopedLock lock(is->lock);
-		
-		is->seekAbs(is->playerTimePos + incr);
-	}
 
-	isptr.reset(); // must be reset in unlocked scope
-	return ret;
-}
+		if(relativePos) pos += is->playerTimePos;
 
-int PlayerObject::seekAbs(double pos) {
-	outOfSync = true;
-	PlayerObject* pl = this;
-	InStreams::ItemPtr isptr = pl->getInStream();
-	if(!isptr.get()) return -1;
-	PlayerInStream* is = &isptr->value;
-	int ret = -1;
-	
-	PyScopedUnlock unlock(pl->lock);
-	{
-		PyScopedLock lock(is->lock);
-		is->seekAbs(pos);
+		if(is->playerStartedPlaying && pl->playing) {
+			// Let it fade out.
+			pl->fader.change(-1, pl->outSamplerate);
+			
+			// Delay seek. The worker-proc will handle it.
+			// This will also fade it in again.
+			is->seekPos = std::max(pos, 0.0);
+		}
+
+		// No fading.
+		else
+			is->seekAbs(pos);
 	}
 	
 	isptr.reset(); // must be reset in unlocked scope
-	return ret;	
 }
 
 PyObject* PlayerObject::curSongMetadata() const {
@@ -1355,6 +1346,22 @@ static bool loopFrame(PlayerObject* player) {
 			popFront(inStreamPtr);
 			inStream = NULL;
 		}
+		
+		if(inStream && player->fader.finished() && player->fader.sampleFactor() == 0) {
+			// It means we are ready to proceed any action in faded-out state.
+			// Currently, that's only seeking.
+			if(inStream->seekPos >= 0) {
+				workerLog << "seek stream to " << inStream->seekPos << endl;
+				PyScopedUnlock unlock(player->lock);
+				PyScopedLock lock(inStream->lock);
+				inStream->seekAbs(inStream->seekPos);
+				inStream->seekPos = -1;
+			}
+			
+			if(player->playing)
+				// Whatever we did, if we are in playing state, fade-in.
+				player->fader.change(1, player->outSamplerate);
+		}
 
 		if(!inStream && player->nextSongOnEof) {
 			workerLog << "switch song" << endl;
@@ -1433,9 +1440,27 @@ void PlayerObject::startWorkerThread() {
 bool PlayerObject::readOutStream(OUTSAMPLE_t* samples, size_t sampleNum, size_t* sampleNumOut) {
 	// We expect to have the PlayerObject lock here.
 	PlayerObject* player = this;
+	OUTSAMPLE_t* origSamples = samples;
 	size_t origSampleNum = sampleNum;
-		
-	if(player->playing || !fader.finished()) {
+	
+	Fader::Scope faderScope(fader);
+	
+	if(player->playing) {
+		if(faderScope.finished() && faderScope.sampleFactor() == 0) {
+			// It means that we faded-out but we are in playing mode.
+			// This means that we are awaiting for some worker-proc-command
+			// to be executed.
+
+			// Wait until buffers are full again.
+			player->outOfSync = true;
+
+			// Fill the buffer with silence.
+			memset((uint8_t*)samples, 0, sampleNum*OUTSAMPLEBYTELEN);
+			return false;
+		}
+	}
+	
+	if(player->playing || !faderScope.finished()) {
 
 		if(sampleNumOut == NULL) {
 			bool outOfSync = player->outOfSync.exchange(false);
@@ -1469,7 +1494,6 @@ bool PlayerObject::readOutStream(OUTSAMPLE_t* samples, size_t sampleNum, size_t*
 			popCount /= OUTSAMPLEBYTELEN; // because they are in bytes but we want number of samples
 			
 			{
-				Fader::Scope faderScope(fader);
 				if(player->volumeAdjustNeeded(&is)) {
 					for(size_t i = 0; i < popCount; ++i) {
 						OUTSAMPLE_t* sampleAddr = samples + i;
@@ -1507,10 +1531,34 @@ bool PlayerObject::readOutStream(OUTSAMPLE_t* samples, size_t sampleNum, size_t*
 	}
 	
 	if(sampleNum > 0 && sampleNumOut == NULL) {
-		// silence
 		if(player->playing)
 			printf("readOutStream: we have %zu too less samples available (requested %zu)\n", sampleNum, origSampleNum);
+
+		// Fade out the current buffer.
+		// Note that this is somewhat hacky, as the number of filled samples vary.
+		// But it's still the best we can do here.
+		const size_t filledSampleNum = origSampleNum - sampleNum;
+		for(size_t i = 0; i < filledSampleNum; ++i) {
+			OUTSAMPLE_t* sampleAddr = origSamples + i;
+			OUTSAMPLE_t sample = *sampleAddr; // TODO: endian swap?
+			double sampleFloat = OutSampleAsFloat(sample);
+			
+			// Very simple. Ignores outNumChannels. But doesn't matter that much.
+			sampleFloat *= double(filledSampleNum - i - 1) / filledSampleNum;
+			
+			sample = (OUTSAMPLE_t) FloatToOutSample(sampleFloat);
+			*sampleAddr = sample; // TODO: endian swap?
+		}
+		
+		// Fill the remaining with silence.
 		memset((uint8_t*)samples, 0, sampleNum*OUTSAMPLEBYTELEN);
+
+		// When we play again, fade in again.
+		faderScope.resetZero();
+		
+		// We are now out-of-sync.
+		// Only start playing again when we have enough data.
+		player->outOfSync = true;
 	}
 	
 	if(sampleNumOut)

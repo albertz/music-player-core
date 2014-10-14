@@ -189,7 +189,7 @@ pyCalcBitmapThumbnail(PyObject* self, PyObject* args, PyObject* kws) {
 	songDuration = (double)totalFrameCount / player->outSamplerate;
 	
 	// Seek back.
-	player->seekAbs(0.0);
+	player->seekSong(0.0, false);
 	if(PyErr_Occurred()) goto final;
 	
 	// init the processor

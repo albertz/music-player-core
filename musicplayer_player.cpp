@@ -280,16 +280,16 @@ PyObject* player_method_seekAbs(PyObject* self, PyObject* arg) {
 	PlayerObject* player = (PlayerObject*) self;
 	double argDouble = PyFloat_AsDouble(arg);
 	if(PyErr_Occurred()) return NULL;
-	int ret = 0;
 	Py_INCREF(self);
 	Py_BEGIN_ALLOW_THREADS
 	{
 		PyScopedLock lock(player->lock);
-		ret = player->seekAbs(argDouble);
+		player->seekSong(argDouble, false);
 	}
 	Py_END_ALLOW_THREADS
 	Py_DECREF(self);
-	return PyBool_FromLong(ret == 0);
+	Py_INCREF(Py_None);
+	return Py_None;
 }
 
 static PyMethodDef md_seekAbs = {
@@ -304,16 +304,16 @@ PyObject* player_method_seekRel(PyObject* self, PyObject* arg) {
 	PlayerObject* player = (PlayerObject*) self;
 	double argDouble = PyFloat_AsDouble(arg);
 	if(PyErr_Occurred()) return NULL;
-	int ret = 0;
 	Py_INCREF(self);
 	Py_BEGIN_ALLOW_THREADS
 	{
 		PyScopedLock lock(player->lock);
-		ret = player->seekRel(argDouble);
+		player->seekSong(argDouble, true);
 	}
 	Py_END_ALLOW_THREADS
 	Py_DECREF(self);
-	return PyInt_FromLong(ret == 0);
+	Py_INCREF(Py_None);
+	return Py_None;
 }
 
 static PyMethodDef md_seekRel = {

@@ -64,11 +64,13 @@ struct PlayerInStream : PlayerInStreamRawPOD {
 	bool playerStartedPlaying; // this would be set by readOutStream()
 	bool playerHitEnd; // this would be set by readOutStream()
 	boost::atomic<double> playerTimePos;
+	boost::atomic<double> seekPos;
 
 	PlayerInStream() {
 		mlock(this, sizeof(*this));
 		memset(this, 0, sizeof(PlayerInStreamRawPOD));
 		playerTimePos = 0;
+		seekPos = -1;
 		timeLen = -1;
 		readerHitEnd = false;
 		playerStartedPlaying = playerHitEnd = false;
