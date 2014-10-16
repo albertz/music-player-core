@@ -163,7 +163,16 @@ static int64_t player_seek(PlayerInStream* is, int64_t offset, int whence) {
 	int64_t ret = -1;
 	
 	PyObject *seekRawFunc = NULL, *args = NULL, *retObj = NULL;
-	if(whence < 0 || whence > 2) goto final; // AVSEEK_SIZE and others not supported atm
+	if(whence == AVSEEK_SIZE) goto final; // Ignore and return -1. This is supported by FFmpeg.
+	if(whence & AVSEEK_FORCE) whence &= ~AVSEEK_FORCE; // Can be ignored.
+	if(whence != SEEK_SET && whence != SEEK_CUR && whence != SEEK_END) {
+		printf("player_seek: invalid whence in params offset:%lli whence:%i\n", offset, whence);
+		goto final;
+	}
+	if(whence == SEEK_SET && offset < 0) {
+		// This is a bug in FFmpeg: https://trac.ffmpeg.org/ticket/4038
+		goto final;
+	}
 	
 	seekRawFunc = PyObject_GetAttrString(song, "seekRaw");
 	if(seekRawFunc == NULL) goto final;
