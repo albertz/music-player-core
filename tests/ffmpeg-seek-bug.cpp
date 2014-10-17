@@ -1,28 +1,53 @@
 
 // compile:
-// c++ -lavutil -lavformat -lavcodec ffmpeg-seek-bug.cpp
+// c++ -g -std=c++0x -lavutil -lavformat -lavcodec ffmpeg-seek-bug.cpp
 
 #define __STDC_LIMIT_MACROS // INT64_MIN and co
 #include <stdio.h>
 #include <stdint.h>
 #include <assert.h>
 #include <string>
+#include <memory>
 
 extern "C" {
 #include <libavformat/avformat.h>
 #include <libswresample/swresample.h>
 }
 
-static FILE* songFile;
+static void closeInputStream(AVFormatContext* formatCtx);
+
+struct Song {
+	FILE* file;
+	AVFormatContext* ctx;
+	int audioStreamIdx;
+	AVStream* audioStream;
+	double pos, len;
+	
+	Song() : file(NULL), ctx(NULL), audioStream(NULL), pos(0), len(0) {
+	}
+	
+	~Song() {
+		if(ctx) closeInputStream(ctx);
+		ctx = NULL;
+		audioStream = NULL;
+		if(file) fclose(file);
+		file = NULL;
+	}
+	
+	void seekAbs(double pos);
+};
 
 
-static int player_read_packet(void*, uint8_t* buf, int buf_size) {
+static int player_read_packet(void* _song, uint8_t* buf, int buf_size) {
 	//printf("read: size:%i\n", buf_size);
-	return fread(buf, 1, buf_size, songFile);
+	Song* song = (Song*) _song;
+	return fread(buf, 1, buf_size, song->file);
 }
 
-static int64_t player_seek(void*, int64_t offset, int whence) {
+static int64_t player_seek(void* _song, int64_t offset, int whence) {
 	printf("seek: offset:%lli whence:%i\n", offset, whence);
+	
+	Song* song = (Song*) _song;
 
 	if(whence == AVSEEK_SIZE) return -1; // Ignore and return -1. This is supported by FFmpeg.
 	if(whence & AVSEEK_FORCE) whence &= ~AVSEEK_FORCE; // Can be ignored.
@@ -32,21 +57,22 @@ static int64_t player_seek(void*, int64_t offset, int whence) {
 	}
 	if(whence == SEEK_SET && offset < 0) {
 		// This is a bug in FFmpeg: https://trac.ffmpeg.org/ticket/4038
+		printf("player_seek: bug triggered, offset:%lli whence:%i\n", offset, whence);
 		abort();
 		return -1;
 	}
 	
-	int ret = fseeko(songFile, offset, whence);
+	int ret = fseeko(song->file, offset, whence);
 	if(ret < 0) {
 		printf("player_seek() error: %s\n", strerror(errno));
 		return -1;
 	}
 	
-	return ftello(songFile);
+	return ftello(song->file);
 }
 
 static
-AVIOContext* initIoCtx() {
+AVIOContext* initIoCtx(Song* song) {
 	int buffer_size = 1024 * 4;
 	unsigned char* buffer = (unsigned char*)av_malloc(buffer_size);
 	
@@ -54,7 +80,7 @@ AVIOContext* initIoCtx() {
 										 buffer,
 										 buffer_size,
 										 0, // writeflag
-										 0, // opaque
+										 song, // opaque
 										 player_read_packet,
 										 NULL, // write_packet
 										 player_seek
@@ -64,11 +90,11 @@ AVIOContext* initIoCtx() {
 }
 
 static
-AVFormatContext* initFormatCtx() {
+AVFormatContext* initFormatCtx(Song* song) {
 	AVFormatContext* fmt = avformat_alloc_context();
 	if(!fmt) return NULL;
 	
-	fmt->pb = initIoCtx();
+	fmt->pb = initIoCtx(song);
 	if(!fmt->pb) {
 		printf("initIoCtx failed\n");
 	}
@@ -94,11 +120,8 @@ static void closeInputStream(AVFormatContext* formatCtx) {
 	avformat_close_input(&formatCtx);
 }
 
-static int songAudioStreamIdx;
-static AVStream* songAudioStream;
-
 /* open a given stream. Return 0 if OK */
-static int stream_component_open(AVFormatContext* ic, int stream_index)
+static int stream_component_open(Song* song, AVFormatContext* ic, int stream_index)
 {
 	AVCodecContext *avctx;
 	AVCodec *codec;
@@ -131,8 +154,8 @@ static int stream_component_open(AVFormatContext* ic, int stream_index)
 	ic->streams[stream_index]->discard = AVDISCARD_DEFAULT;
 	switch (avctx->codec_type) {
 		case AVMEDIA_TYPE_AUDIO:
-			songAudioStreamIdx = stream_index;
-			songAudioStream = ic->streams[stream_index];
+			song->audioStreamIdx = stream_index;
+			song->audioStream = ic->streams[stream_index];
 			
 			//player_resetStreamPackets(is);
 			break;
@@ -147,12 +170,14 @@ static int stream_component_open(AVFormatContext* ic, int stream_index)
 static AVFormatContext* songCtx;
 static double songLen;
 
-static bool openSong(const std::string& filename) {
+static std::shared_ptr<Song> openSong(const std::string& filename) {
 	
-	songFile = fopen(filename.c_str(), "rb");
-	if(!songFile) {
+	auto song = std::make_shared<Song>();
+	
+	song->file = fopen(filename.c_str(), "rb");
+	if(!song->file) {
 		printf("could not open file\n");
-		return false;
+		return NULL;
 	}
 	
 	AVFormatContext* formatCtx = NULL;
@@ -175,9 +200,9 @@ static bool openSong(const std::string& filename) {
 		
 		if(formatCtx)
 			closeInputStream(formatCtx);
-		player_seek(NULL, 0, SEEK_SET);
+		player_seek(song.get(), 0, SEEK_SET);
 		
-		formatCtx = initFormatCtx();
+		formatCtx = initFormatCtx(song.get());
 		if(!formatCtx) {
 			printf("initFormatCtx failed\n");
 			goto final;
@@ -222,9 +247,9 @@ static bool openSong(const std::string& filename) {
 			av_log_set_level(oldloglevel);
 			continue;
 		}
-		songAudioStreamIdx = ret;
+		song->audioStreamIdx = ret;
 		
-		ret = stream_component_open(formatCtx, songAudioStreamIdx);
+		ret = stream_component_open(song.get(), formatCtx, song->audioStreamIdx);
 		if(ret < 0) {
 			printf("cannot open audio stream (%s)\n", fmt->name);
 			continue;
@@ -238,40 +263,38 @@ static bool openSong(const std::string& filename) {
 	goto final;
 	
 success:
-	songCtx = formatCtx;
+	song->ctx = formatCtx;
 	formatCtx = NULL;
 	
 	// Get the song len: There is formatCtx.duration in AV_TIME_BASE
 	// and there is stream.duration in stream time base.
-	assert(songAudioStream);
-	songLen = av_q2d(songAudioStream->time_base) * songAudioStream->duration;
+	assert(song->audioStream);
+	song->len = av_q2d(song->audioStream->time_base) * song->audioStream->duration;
 	
-	return true;
+	return song;
 	
 final:
 	if(formatCtx) closeInputStream(formatCtx);
 	
-	return false;
+	return NULL;
 }
 
-static void closeSong() {
-	if(songCtx)
-		closeInputStream(songCtx);
-	songCtx = NULL;
-	songAudioStream = NULL;
-}
 
-static void seekAbs(double pos) {
+void Song::seekAbs(double pos) {
 	if(pos < 0) pos = 0;
 	
+	double incr = this->pos - pos;
+
 	int64_t seek_target = int64_t(pos * AV_TIME_BASE);
-	int64_t seek_min    = 0;
-	int64_t seek_max    = INT64_MAX;
+	int64_t seek_min    = (incr > 0) ? (seek_target - int64_t(incr * AV_TIME_BASE) + 2) : 0;
+	int64_t seek_max    = (incr < 0) ? (seek_target - int64_t(incr * AV_TIME_BASE) - 2) : INT64_MAX;
 	if(seek_target < 0) seek_target = INT64_MAX;
+	if(seek_min < 0) seek_min = 0;
+	if(seek_max < 0) seek_max = INT64_MAX;
 	
 	int ret =
 	avformat_seek_file(
-					   songCtx,
+					   this->ctx,
 					   -1, // stream
 					   seek_min,
 					   seek_target,
@@ -281,7 +304,10 @@ static void seekAbs(double pos) {
 	
 	if(ret < 0)
 		printf("seekAbs(%f): seek failed\n", pos);
+	else
+		this->pos = pos;
 }
+
 
 int main(int argc, const char** argv) {
 	if(argc < 2) {
@@ -295,17 +321,20 @@ int main(int argc, const char** argv) {
 	avcodec_register_all();
 	av_register_all();
 	
-	if(!openSong(filename)) return -1;
+	auto song = openSong(filename);
+	if(!song) return -1;
 
-	// And reopen.
-	player_seek(NULL, 0, SEEK_SET);
-	closeSong();
-	if(!openSong(filename)) return -1;
-
-	printf("song len: %f\n", songLen);
+	printf("song len: %f\n", song->len);
 	
 	// This should trigger the problem on certain mp3s.
-	seekAbs(0.001);
+	song->seekAbs(0.001);
+
+/*
+	// And reopen.
+	player_seek(song.get(), 0, SEEK_SET);
+	closeSong();
+	if(!openSong(filename)) return -1;
+*/
 
 	return 0;
 }
