@@ -22,7 +22,7 @@ static int player_read_packet(void*, uint8_t* buf, int buf_size) {
 }
 
 static int64_t player_seek(void*, int64_t offset, int whence) {
-	//printf("seek: offset:%lli whence:%i\n", offset, whence);
+	printf("seek: offset:%lli whence:%i\n", offset, whence);
 
 	if(whence == AVSEEK_SIZE) return -1; // Ignore and return -1. This is supported by FFmpeg.
 	if(whence & AVSEEK_FORCE) whence &= ~AVSEEK_FORCE; // Can be ignored.
@@ -245,12 +245,6 @@ success:
 	// and there is stream.duration in stream time base.
 	assert(songAudioStream);
 	songLen = av_q2d(songAudioStream->time_base) * songAudioStream->duration;
-	if(songLen < 0) {
-		songLen = -1;
-		printf("unknown song len\n");
-	}
-	else
-		printf("song len: %f\n", songLen);
 	
 	return true;
 	
@@ -258,6 +252,13 @@ final:
 	if(formatCtx) closeInputStream(formatCtx);
 	
 	return false;
+}
+
+static void closeSong() {
+	if(songCtx)
+		closeInputStream(songCtx);
+	songCtx = NULL;
+	songAudioStream = NULL;
 }
 
 static void seekAbs(double pos) {
@@ -295,9 +296,16 @@ int main(int argc, const char** argv) {
 	av_register_all();
 	
 	if(!openSong(filename)) return -1;
+
+	// And reopen.
+	player_seek(NULL, 0, SEEK_SET);
+	closeSong();
+	if(!openSong(filename)) return -1;
+
+	printf("song len: %f\n", songLen);
 	
 	// This should trigger the problem on certain mp3s.
-	seekAbs(0.5);
+	seekAbs(0.001);
 
 	return 0;
 }
