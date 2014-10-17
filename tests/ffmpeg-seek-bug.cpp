@@ -2,7 +2,9 @@
 // compile:
 // c++ -lavutil -lavformat -lavcodec ffmpeg-seek-bug.cpp
 
+#define __STDC_LIMIT_MACROS // INT64_MIN and co
 #include <stdio.h>
+#include <stdint.h>
 #include <assert.h>
 #include <string>
 
@@ -15,10 +17,13 @@ static FILE* songFile;
 
 
 static int player_read_packet(void*, uint8_t* buf, int buf_size) {
+	//printf("read: size:%i\n", buf_size);
 	return fread(buf, 1, buf_size, songFile);
 }
 
 static int64_t player_seek(void*, int64_t offset, int whence) {
+	//printf("seek: offset:%lli whence:%i\n", offset, whence);
+
 	if(whence == AVSEEK_SIZE) return -1; // Ignore and return -1. This is supported by FFmpeg.
 	if(whence & AVSEEK_FORCE) whence &= ~AVSEEK_FORCE; // Can be ignored.
 	if(whence != SEEK_SET && whence != SEEK_CUR && whence != SEEK_END) {
@@ -197,7 +202,7 @@ static bool openSong(const std::string& filename) {
 		}
 		
 #ifdef DEBUG
-		av_dump_format(formatCtx, 0, debugName.c_str(), 0);
+		av_dump_format(formatCtx, 0, filename.c_str(), 0);
 #endif
 		
 		if(formatCtx->nb_streams == 0) {
@@ -247,10 +252,6 @@ success:
 	else
 		printf("song len: %f\n", songLen);
 	
-	{
-		//			seekAbs(pos);
-	}
-	
 	return true;
 	
 final:
@@ -259,15 +260,45 @@ final:
 	return false;
 }
 
+static void seekAbs(double pos) {
+	if(pos < 0) pos = 0;
+	
+	int64_t seek_target = int64_t(pos * AV_TIME_BASE);
+	int64_t seek_min    = 0;
+	int64_t seek_max    = INT64_MAX;
+	if(seek_target < 0) seek_target = INT64_MAX;
+	
+	int ret =
+	avformat_seek_file(
+					   songCtx,
+					   -1, // stream
+					   seek_min,
+					   seek_target,
+					   seek_max,
+					   0 //flags
+					   );
+	
+	if(ret < 0)
+		printf("seekAbs(%f): seek failed\n", pos);
+}
+
 int main(int argc, const char** argv) {
 	if(argc < 2) {
 		printf("%s <mp3>\n", argv[0]);
 		return 1;
 	}
 	const char* filename = argv[1];
+
+	// init FFmpeg
+	av_log_set_level(AV_LOG_INFO);
+	avcodec_register_all();
+	av_register_all();
 	
 	if(!openSong(filename)) return -1;
 	
+	// This should trigger the problem on certain mp3s.
+	seekAbs(0.5);
+
 	return 0;
 }
 
