@@ -15,7 +15,7 @@ public:
 	Fader();
 
 	// If samplerate differs, it resets.
-	void change(int8_t inc /* 1 for fading in, -1 for fading out */, int Samplerate);
+	void change(int8_t inc /* 1 for fading in, -1 for fading out */, int Samplerate, bool reset);
 
 	void finish();
 	void wait(PlayerObject* player);

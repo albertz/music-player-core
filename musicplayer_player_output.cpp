@@ -314,7 +314,7 @@ struct PlayerObject::OutStream {
 		if(this->stream == NULL) return;
 		// we expect that we have the player lock here.
 		// reset fader.
-		player->fader.change(0,0);
+		player->fader.change(0,0,true);
 		// we must release the player lock so that any thread-join can be done.
 		PaStream* stream = NULL;
 		std::swap(stream, this->stream);
@@ -376,7 +376,7 @@ int PlayerObject::setPlaying(bool playing) {
 			playing = false;
 		
 		if(soundcardOutputEnabled && player->outStream.get() && player->outStream->isOpen() && oldplayingstate != playing)
-			fader.change(playing ? 1 : -1, outSamplerate);
+			fader.change(playing ? 1 : -1, outSamplerate, false);
 		player->playing = playing;
 	}
 	

@@ -14,12 +14,13 @@ Fader::Fader() {
 
 #define FADE_TIME 50 // in ms
 
-void Fader::change(int8_t _inc, int Samplerate) {
+void Fader::change(int8_t _inc, int Samplerate, bool reset) {
 	uint16_t newLimit = Samplerate * FADE_TIME / 1000;
-	bool _finished = finished();
+	reset = reset && finished();
 	uint16_t oldLimit = limit.exchange(newLimit);
+	reset = reset || oldLimit != newLimit;
 	inc = _inc;
-	if(oldLimit != newLimit || _finished) {
+	if(reset) {
 		if(_inc >= 0) cur = 0;
 		else cur = newLimit;
 	}

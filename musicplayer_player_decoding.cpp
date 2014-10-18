@@ -319,7 +319,7 @@ void PlayerObject::seekSong(double pos, bool relativePos) {
 
 		if(is->playerStartedPlaying && pl->playing) {
 			// Let it fade out.
-			pl->fader.change(-1, pl->outSamplerate);
+			pl->fader.change(-1, pl->outSamplerate, false);
 			
 			// Delay seek. The worker-proc will handle it.
 			// This will also fade it in again.
@@ -1369,7 +1369,7 @@ static bool loopFrame(PlayerObject* player) {
 			
 			if(player->playing)
 				// Whatever we did, if we are in playing state, fade-in.
-				player->fader.change(1, player->outSamplerate);
+				player->fader.change(1, player->outSamplerate, false);
 		}
 
 		if(!inStream && player->nextSongOnEof) {
