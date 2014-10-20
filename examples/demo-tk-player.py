@@ -65,17 +65,21 @@ def onSongChange(**kwargs):
 	songName.set(os.path.basename(player.curSong.url))
 	songLabel.set(pprint.pformat(player.curSongMetadata))
 def cmdPlayPause(*args): player.playing = not player.playing
+def cmdSeekBack(*args): player.seekRel(-10)
+def cmdSeekFwd(*args): player.seekRel(10)
 def cmdNext(*args): player.nextSong()
 
 def refreshTime():
 	songTime.set("Time: %.1f / %.1f" % (player.curSongPos or -1, player.curSongLen or -1))
 	window.after(10, refreshTime) # every 10ms
 
+Tkinter.Button(window, text="Play/Pause", command=cmdPlayPause).pack()
+Tkinter.Button(window, text="Seek -10", command=cmdSeekBack).pack()
+Tkinter.Button(window, text="Seek +10", command=cmdSeekFwd).pack()
+Tkinter.Button(window, text="Next", command=cmdNext).pack()
 Tkinter.Label(window, textvariable=songName).pack()
 Tkinter.Label(window, textvariable=songTime).pack()
 Tkinter.Label(window, textvariable=songLabel).pack()
-Tkinter.Button(window, text="Play/Pause", command=cmdPlayPause).pack()
-Tkinter.Button(window, text="Next", command=cmdNext).pack()
 
 refreshTime()
 
