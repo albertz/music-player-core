@@ -317,7 +317,7 @@ void PlayerObject::seekSong(double pos, bool relativePos) {
 
 		if(relativePos) pos += is->playerTimePos;
 
-		if(is->playerStartedPlaying && pl->playing) {
+		if(is->playerStartedPlaying && pl->fader.sampleFactor() != 0) {
 			// Let it fade out.
 			pl->fader.change(-1, pl->outSamplerate, false);
 			
@@ -1276,8 +1276,8 @@ static bool loopFrame(PlayerObject* player) {
 		frontPtr.reset();
 	};
 
-	auto switchNextSong = [&]() {
-		if(!player->getNextSong(false)) {
+	auto switchNextSong = [&](bool skipped = false) {
+		if(!player->getNextSong(skipped, false)) {
 			fprintf(stderr, "cannot get next song\n");
 			PyScopedGIL gstate;
 			if(PyErr_Occurred())
@@ -1356,23 +1356,29 @@ static bool loopFrame(PlayerObject* player) {
 			inStream = NULL;
 		}
 		
-		if(inStream && player->fader.finished() && player->fader.sampleFactor() == 0) {
+		if(inStream && player->fader.sampleFactor() == 0) {
 			// It means we are ready to proceed any action in faded-out state.
 			// Currently, that's only seeking.
 			if(inStream->seekPos >= 0) {
-				workerLog << "seek stream to " << inStream->seekPos << endl;
+				workerLog << "faded-out: seek stream to " << inStream->seekPos << endl;
 				PyScopedUnlock unlock(player->lock);
 				PyScopedLock lock(inStream->lock);
 				inStream->seekAbs(inStream->seekPos);
 				inStream->seekPos = -1;
 			}
 			
+			if(inStream->skipMe) {
+				workerLog << "faded-out: skip song" << endl;
+				switchNextSong(true);
+			}
+			
+			// Note that we are not necessarily in playing state.
 			if(player->playing)
 				// Whatever we did, if we are in playing state, fade-in.
 				player->fader.change(1, player->outSamplerate, false);
 		}
 
-		if(!inStream && player->nextSongOnEof) {
+		else if(!inStream && player->nextSongOnEof) {
 			workerLog << "switch song" << endl;
 			switchNextSong();
 		}

@@ -17,10 +17,27 @@
 #define NUMCHANNELS 2
 
 
-bool PlayerObject::getNextSong(bool skipped) {
+bool PlayerObject::getNextSong(bool skipped, bool maybeFade) {
 	PlayerObject* player = this;
 	
 	// We must hold the player lock here.
+
+	if(maybeFade) {
+		InStreams::ItemPtr isptr = player->getInStream();
+		if(isptr.get()) {
+			PlayerInStream* is = &isptr->value;
+
+			if(is->playerStartedPlaying && player->fader.sampleFactor() != 0) {
+				// Let it fade out.
+				player->fader.change(-1, player->outSamplerate, false);
+				
+				// Delay skip. The worker-proc will handle it.
+				// This will also fade it in again.
+				is->skipMe = true;
+				return true;
+			}
+		}
+	}
 
 	if(skipped)
 		outOfSync = true;
@@ -331,7 +348,7 @@ PyObject* player_method_nextSong(PyObject* self, PyObject* _unused_arg) {
 	Py_BEGIN_ALLOW_THREADS
 	{
 		PyScopedLock lock(player->lock);
-		ret = player->getNextSong(true);
+		ret = player->getNextSong(true, true);
 	}
 	Py_END_ALLOW_THREADS
 	Py_DECREF(self);

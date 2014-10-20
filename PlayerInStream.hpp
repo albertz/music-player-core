@@ -64,16 +64,19 @@ struct PlayerInStream : PlayerInStreamRawPOD {
 	bool playerStartedPlaying; // this would be set by readOutStream()
 	bool playerHitEnd; // this would be set by readOutStream()
 	boost::atomic<double> playerTimePos;
+	// The following are delayed actions after fade-out.
 	boost::atomic<double> seekPos;
-
+	boost::atomic<bool> skipMe;
+	
 	PlayerInStream() {
 		mlock(this, sizeof(*this));
 		memset(this, 0, sizeof(PlayerInStreamRawPOD));
 		playerTimePos = 0;
-		seekPos = -1;
 		timeLen = -1;
 		readerHitEnd = false;
 		playerStartedPlaying = playerHitEnd = false;
+		seekPos = -1;
+		skipMe = false;
 	}
 	~PlayerInStream();
 

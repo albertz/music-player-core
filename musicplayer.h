@@ -83,7 +83,7 @@ struct PlayerObject {
 	bool skipPyExceptions; // for all callbacks, mainly song.readPacket
 	
 	void seekSong(double pos, bool relativePos);
-	bool getNextSong(bool skipped);
+	bool getNextSong(bool skipped, bool maybeFade);
 	
 	void workerProc(boost::atomic<bool>& stopSignal);
 	PyThread workerThread;
