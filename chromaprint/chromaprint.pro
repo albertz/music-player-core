@@ -7,9 +7,12 @@
 }
 
 TEMPLATE = lib
-CONFIG = staticlib
+CONFIG += staticlib
 
 QMAKE_CXXFLAGS += -DHAVE_CONFIG_H
 SOURCES += $$files(*.cpp)
 HEADERS += $$files(*.h)
 
+mac {
+	INCLUDEPATH += ../external/ffmpeg/target/include
+}
