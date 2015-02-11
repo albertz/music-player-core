@@ -8,6 +8,7 @@
 //   c++ portaudio-wavplay-demo.cpp -lportaudio
 
 #include <stdio.h>
+#include <string.h>
 #include <portaudio.h>
 #include <string>
 #include <stdint.h>
