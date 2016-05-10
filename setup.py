@@ -4,33 +4,29 @@ from distutils.core import setup, Extension
 from glob import glob
 import time, sys
 
+# taken from http://code.activestate.com/recipes/502261-python-distutils-pkg-config/
+import commands
+
+# on fedora (23)
+# dnf install ffmpeg-devel portaudio-devel libchromaprint-devel
+
+def pkgconfig(*packages, **kw):
+    flag_map = {'-I': 'include_dirs', '-L': 'library_dirs', '-l': 'libraries'}
+    for token in commands.getoutput("pkg-config --libs --cflags %s" % ' '.join(packages)).split():
+        if flag_map.has_key(token[:2]):
+            kw.setdefault(flag_map.get(token[:2]), []).append(token[2:])
+        else: # throw others to extra_link_args
+            kw.setdefault('extra_link_args', []).append(token)
+    return kw
+
 mod = Extension(
 	'musicplayer',
 	sources = glob("*.cpp"),
 	depends = glob("*.h") + glob("*.hpp"),
 	extra_compile_args = ["-std=c++11"],
 	undef_macros = ['NDEBUG'],
-	libraries = [
-		'avutil',
-		'avformat',
-		'avcodec',
-		'swresample',
-		'portaudio',
-		'chromaprint'
-		]
+        **pkgconfig('libavutil', 'libavformat', 'libavcodec', 'libswresample', 'portaudio-2.0', 'libchromaprint')
 	)
-
-# Add some more include/lib paths.
-# Note: This should probably cover already a lot of cases.
-# However, if this is not enough, get some more inspiration from here:
-#   https://github.com/python-imaging/Pillow/blob/master/setup.py
-def addPrefix(prefix):
-	mod.include_dirs += [prefix + "/include"]
-	mod.library_dirs += [prefix + "/lib"]
-addPrefix("/usr/local")
-addPrefix("/opt/local") # e.g. MacPorts
-if sys.platform == "darwin": addPrefix("/sw") # fink dir
-
 
 setup(
 	name = 'musicplayer',
