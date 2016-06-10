@@ -3,10 +3,9 @@
 
 #include <Python.h>
 #include <pythread.h>
-
-#include <boost/noncopyable.hpp>
-#include <boost/function.hpp>
-#include <boost/atomic.hpp>
+#include <atomic>
+#include <functional>
+#include "NonCopyAble.hpp"
 
 
 struct PyMutex {
@@ -20,19 +19,19 @@ struct PyMutex {
 	void unlock();
 };
 
-struct PyScopedLock : boost::noncopyable {
+struct PyScopedLock : noncopyable {
 	PyMutex& mutex;
 	PyScopedLock(PyMutex& m);
 	~PyScopedLock();
 };
 
-struct PyScopedUnlock : boost::noncopyable {
+struct PyScopedUnlock : noncopyable {
 	PyMutex& mutex;
 	PyScopedUnlock(PyMutex& m);
 	~PyScopedUnlock();
 };
 
-struct PyScopedGIL : boost::noncopyable {
+struct PyScopedGIL : noncopyable {
 	PyGILState_STATE gstate;
 	PyScopedGIL() { gstate = PyGILState_Ensure(); }
 	~PyScopedGIL() {
@@ -48,7 +47,7 @@ struct PyScopedGIL : boost::noncopyable {
 	}
 };
 
-struct PyScopedGIUnlock : boost::noncopyable {
+struct PyScopedGIUnlock : noncopyable {
 	PyScopedGIL gstate; // in case we didn't had the GIL
 	PyThreadState* _save;
 	PyScopedGIUnlock() : _save(NULL) { Py_UNBLOCK_THREADS }
@@ -56,11 +55,11 @@ struct PyScopedGIUnlock : boost::noncopyable {
 };
 
 
-struct PyThread : boost::noncopyable {
+struct PyThread : noncopyable {
 	PyMutex lock;
-	boost::atomic<bool> running;
-	boost::atomic<bool> stopSignal;
-	boost::function<void(boost::atomic<bool>& stopSignal)> func;
+	std::atomic<bool> running;
+	std::atomic<bool> stopSignal;
+	std::function<void(std::atomic<bool>& stopSignal)> func;
 	long ident;
 	PyThread(); ~PyThread();
 	bool start();

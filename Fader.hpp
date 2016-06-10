@@ -2,15 +2,15 @@
 #define MP_FADER_HPP
 
 #include <stdint.h>
-#include <boost/atomic.hpp>
+#include <atomic>
 
 struct PlayerObject;
 
 class Fader {
 private:
-	boost::atomic<uint16_t> cur;
-	boost::atomic<uint16_t> limit;
-	boost::atomic<int8_t> inc; // -1 or 1 or 0
+	std::atomic<uint16_t> cur;
+	std::atomic<uint16_t> limit;
+	std::atomic<int8_t> inc; // -1 or 1 or 0
 public:
 	Fader();
 

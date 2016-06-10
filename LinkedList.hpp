@@ -1,8 +1,7 @@
 #ifndef MP_LINKEDLIST_HPP
 #define MP_LINKEDLIST_HPP
 
-#include <boost/smart_ptr/intrusive_ref_counter.hpp>
-#include <boost/atomic.hpp>
+#include <atomic>
 #include <assert.h>
 #include "IntrusivePtr.hpp"
 
@@ -21,10 +20,10 @@ public:
 		S_PoppedOut,
 	};
 
-	struct Item : public boost::intrusive_ref_counter< Item, boost::thread_safe_counter > {
+	struct Item : public intrusive_ref_counter {
 		ItemPtr prev, next;
 		ItemPtr prevBackup, nextBackup;
-		boost::atomic<ItemState> state;
+		std::atomic<ItemState> state;
 		T value;
 
 		Item() : state(S_Uninitialized), value() {}
