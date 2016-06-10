@@ -1,7 +1,7 @@
 #ifndef MP_INTRUSIVEPTR_HPP
 #define MP_INTRUSIVEPTR_HPP
 
-#include <boost/atomic.hpp>
+#include <atomic>
 
 // boost::intrusive_ptr but safe/atomic.
 // I.e. pointer to an object with an embedded reference count.
@@ -10,7 +10,7 @@
 
 template<typename T>
 struct IntrusivePtr {
-	boost::atomic<T*> ptr;
+	std::atomic<T*> ptr;
 
 	IntrusivePtr(T* _p = NULL) : ptr(NULL) {
 		if(_p) {
@@ -70,5 +70,22 @@ struct IntrusivePtr {
 		swap(IntrusivePtr(_p));
 	}
 };
+
+struct intrusive_ref_counter {
+	std::atomic<ssize_t> ref_count;
+	intrusive_ref_counter() : ref_count(0) {}
+};
+
+template<typename T>
+void intrusive_ptr_add_ref(T* obj) {
+	obj->ref_count++;
+}
+
+template<typename T>
+void intrusive_ptr_release(T* obj) {
+	if(obj->ref_count.fetch_sub(1) <= 1) {
+		delete obj;
+	}
+}
 
 #endif // INTRUSIVEPTR_HPP

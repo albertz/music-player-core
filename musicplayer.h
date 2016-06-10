@@ -43,8 +43,8 @@ PyObject* pyCalcReplayGain(PyObject* self, PyObject* args, PyObject* kws);
 #include "LinkedList.hpp"
 #include "PlayerInStream.hpp"
 
-#include <boost/shared_ptr.hpp>
-#include <boost/atomic.hpp>
+#include <memory>
+#include <atomic>
 
 
 // The player structure. Create by ffmpeg.createPlayer().
@@ -56,7 +56,7 @@ struct PlayerObject {
 	PyObject* queue;
 	PyObject* peekQueue;
 	PyObject* curSong;
-	boost::atomic<bool> playing;
+	std::atomic<bool> playing;
 	bool soundcardOutputEnabled; // if enabled, uses PortAudio to play on soundcard. otherwise call readStreamOut manually
 	std::string preferredSoundDevice;
 	int setPlaying(bool playing);
@@ -74,7 +74,7 @@ struct PlayerObject {
 	void setAudioTgt(int samplerate, int numchannels);
 	double timeDelay(size_t sampleNum) { return double(sampleNum)/outSamplerate/outNumChannels; }
 	Fader fader;
-	boost::atomic<bool> outOfSync; // for readOutStream
+	std::atomic<bool> outOfSync; // for readOutStream
 	
 	// private
 	PyObject* dict;
@@ -114,7 +114,7 @@ struct PlayerObject {
 	bool readOutStream(OUTSAMPLE_t* samples, size_t sampleNum, size_t* sampleNumOut);
 	
 	struct OutStream;
-	boost::shared_ptr<OutStream> outStream;
+	std::shared_ptr<OutStream> outStream;
 		
 	/* Important note about the lock:
 	 To avoid deadlocks with on thread waiting on the Python GIL and another on this lock,
@@ -139,8 +139,8 @@ struct PlayerObject {
 	// Note: When enabling these, we expect to hold the player lock.
 	// So while we hold the player lock, these can not be enabled from somewhere else.
 	// These can be disabled though in unlocked scope.
-	boost::atomic<bool> pyQueueLock; // This covers anything which would potentially modifiy `queue` or `peekQueue`.
-	boost::atomic<bool> openStreamLock; // This covers the opening of a PlayerInStream. (Only because of FFmpeg issues. Maybe should be global. Should not be needed theoretically if FFmpeg would be safe.)
+	std::atomic<bool> pyQueueLock; // This covers anything which would potentially modifiy `queue` or `peekQueue`.
+	std::atomic<bool> openStreamLock; // This covers the opening of a PlayerInStream. (Only because of FFmpeg issues. Maybe should be global. Should not be needed theoretically if FFmpeg would be safe.)
 };
 
 #endif

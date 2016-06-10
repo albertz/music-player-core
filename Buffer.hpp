@@ -1,7 +1,7 @@
 #ifndef MP_BUFFER_HPP
 #define MP_BUFFER_HPP
 
-#include <boost/atomic.hpp>
+#include <atomic>
 #include <stdint.h>
 #include "LinkedList.hpp"
 
@@ -12,7 +12,7 @@ struct Buffer {
 	struct Chunk {
 		uint8_t data[BUFFER_CHUNK_SIZE];
 		typedef uint16_t Idx;
-		boost::atomic<Idx> start, end;
+		std::atomic<Idx> start, end;
 		uint8_t* pt() { return data + start; }
 		uint16_t size() const { assert(start <= end); return end - start; }
 		static uint16_t BufferSize() { return BUFFER_CHUNK_SIZE; }
@@ -20,7 +20,7 @@ struct Buffer {
 		Chunk();
 	};
 	LinkedList<Chunk> chunks;
-	boost::atomic<size_t> _size;
+	std::atomic<size_t> _size;
 
 	Buffer();
 	
