@@ -2,7 +2,7 @@
 import os, sys
 
 def sysExec(cmd):
-	print " ".join(cmd)
+	print(" ".join(cmd))
 	r = os.system(" ".join(cmd))
 	if r != 0: sys.exit(r)
 
@@ -67,7 +67,7 @@ def link(outfile, infiles, options):
 		options[idx:idx+1] = ["-undefined", "dynamic_lookup"]
 
 	if is_uptodate(outfile, depfiles=infiles):
-		print "up-to-date:", outfile
+		print("up-to-date:", outfile)
 		return
 
 	if sys.platform == "darwin":
@@ -93,7 +93,7 @@ def link_exec(outfile, infiles, options):
 	options += ["-lc", "-lc++"]
 
 	if is_uptodate(outfile, depfiles=infiles):
-		print "up-to-date:", outfile
+		print("up-to-date: %s" % outfile)
 		return
 
 	sysExec(
@@ -118,7 +118,7 @@ def cc_single(infile, options):
 	depfilename = get_depfilename(outfilename)
 
 	if is_uptodate(outfilename):
-		print "up-to-date:", outfilename
+		print("up-to-date: %s" % outfilename)
 		return
 
 	sysExec(
@@ -134,6 +134,8 @@ def cc(files, options):
 
 LinkPython = False
 UsePyPy = False
+Python3 = True
+
 
 def get_python_linkopts():
 	if LinkPython:
@@ -148,7 +150,13 @@ def get_python_ccopts():
 	if UsePyPy:
 		return ["-I", "/usr/local/Cellar/pypy/1.9/include"]
 	else:
-		return [
-			"-I", "/System/Library/Frameworks/Python.framework/Headers/", # mac
-			"-I", "/usr/include/python2.7", # common linux/unix
-		]
+		if Python3:
+			return [
+				"-I", "/usr/local/opt/python3/Frameworks/Python.framework/Versions/3.5/Headers", # mac
+				"-I", "/usr/include/python3.5"
+			]
+		else:
+			return [
+				"-I", "/System/Library/Frameworks/Python.framework/Headers", # mac
+				"-I", "/usr/include/python2.7", # common linux/unix
+			]
