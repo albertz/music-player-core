@@ -147,16 +147,19 @@ def get_python_linkopts():
 		return ["--weak-linking"]
 
 def get_python_ccopts():
+	flags = []
 	if UsePyPy:
-		return ["-I", "/usr/local/Cellar/pypy/1.9/include"]
+		flags += ["-I", "/usr/local/Cellar/pypy/1.9/include"]
 	else:
 		if Python3:
-			return [
+			flags += [
 				"-I", "/usr/local/opt/python3/Frameworks/Python.framework/Versions/3.5/Headers", # mac
 				"-I", "/usr/include/python3.5"
 			]
 		else:
-			return [
+			flags += [
 				"-I", "/System/Library/Frameworks/Python.framework/Headers", # mac
 				"-I", "/usr/include/python2.7", # common linux/unix
 			]
+	flags += ["-I", "/usr/local/opt/ffmpeg/include"]
+	return flags
