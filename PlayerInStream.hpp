@@ -14,7 +14,7 @@ extern "C" {
 #include "PyUtils.h"
 #include "PyThreading.hpp"
 #include "Buffer.hpp"
-#include <boost/atomic.hpp>
+#include <atomic>
 
 struct PlayerObject;
 
@@ -63,10 +63,10 @@ struct PlayerInStream : PlayerInStreamRawPOD {
 	bool readerHitEnd; // this will be set by audio_decode_frame()
 	bool playerStartedPlaying; // this would be set by readOutStream()
 	bool playerHitEnd; // this would be set by readOutStream()
-	boost::atomic<double> playerTimePos;
+	std::atomic<double> playerTimePos;
 	// The following are delayed actions after fade-out.
-	boost::atomic<double> seekPos;
-	boost::atomic<bool> skipMe;
+	std::atomic<double> seekPos;
+	std::atomic<bool> skipMe;
 	
 	PlayerInStream() {
 		mlock(this, sizeof(*this));

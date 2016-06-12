@@ -85,7 +85,7 @@ struct PlayerObject {
 	void seekSong(double pos, bool relativePos);
 	bool getNextSong(bool skipped, bool maybeFade);
 	
-	void workerProc(boost::atomic<bool>& stopSignal);
+	void workerProc(std::atomic<bool>& stopSignal);
 	PyThread workerThread;
 	void startWorkerThread();
 	
