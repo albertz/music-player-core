@@ -11,16 +11,16 @@ from compile_utils import *
 import compile_utils as c
 
 os.chdir(os.path.dirname(__file__))
-sysExec(["mkdir", "-p", "build"])
+sys_exec(["mkdir", "-p", "build"])
 os.chdir("build")
 
-staticChromaprint = False
+StaticChromaprint = False
 
 print("* Building musicplayer.so")
 
 ffmpeg_files = \
 	sorted(glob("../*.cpp")) + \
-	(sorted(glob("../chromaprint/*.cpp")) if staticChromaprint else [])
+	(sorted(glob("../chromaprint/*.cpp")) if StaticChromaprint else [])
 
 cc(
 	ffmpeg_files,
@@ -29,7 +29,7 @@ cc(
 		"-g",
 	] +
 	get_python_ccopts() +
-	(["-I", "../chromaprint"] if staticChromaprint else [])
+	(["-I", "../chromaprint"] if StaticChromaprint else [])
 )
 
 link(
@@ -43,6 +43,6 @@ link(
 		"-lportaudio",
 	] +
 	get_python_linkopts() +
-	([] if staticChromaprint else ["-lchromaprint"])
+	([] if StaticChromaprint else ["-lchromaprint"])
 )
 

@@ -4,7 +4,7 @@ import sys
 from subprocess import check_output, CalledProcessError
 
 
-def sysExec(cmd):
+def sys_exec(cmd):
 	print(" ".join(cmd))
 	r = os.system(" ".join(cmd))
 	if r != 0:
@@ -84,7 +84,7 @@ def link(outfile, infiles, options):
 		return
 
 	if sys.platform == "darwin":
-		sysExec(
+		sys_exec(
 			["libtool", "-dynamic", "-o", outfile] +
 			infiles +
 			options +
@@ -92,7 +92,7 @@ def link(outfile, infiles, options):
 			["-lc"]
 		)
 	else:
-		sysExec(
+		sys_exec(
 			["ld"] +
 			["-L/usr/local/lib"] +
 			infiles +
@@ -110,7 +110,7 @@ def link_exec(outfile, infiles, options):
 		print("up-to-date: %s" % outfile)
 		return
 
-	sysExec(
+	sys_exec(
 		["cc"] +
 		infiles +
 		options +
@@ -136,7 +136,7 @@ def cc_single(infile, options):
 		print("up-to-date: %s" % outfilename)
 		return
 
-	sysExec(
+	sys_exec(
 		["cc"] + options + CFLAGS +
 		["-c", infile, "-o", outfilename, "-MMD", "-MF", depfilename]
 	)

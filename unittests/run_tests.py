@@ -9,7 +9,7 @@ sys.path += [".."]
 from compile_utils import *
 import compile_utils as c
 
-sysExec(["mkdir","-p","build"])
+sys_exec(["mkdir", "-p", "build"])
 os.chdir("build")
 
 c.CFLAGS += ["-I../.."]
@@ -22,7 +22,7 @@ def testCpp(fn):
 		[c.get_cc_outfilename(fn)],
 		options=["-g"]
 	)
-	sysExec(["./" + binfile])
+	sys_exec(["./" + binfile])
 	print os.path.basename(fn), ": success"
 
 def test(fn):
