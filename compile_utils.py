@@ -182,7 +182,7 @@ def get_pkg_config(pkg_config_args, *packages):
     # Maybe we have multiple pkg-config, and maybe some of them finds it.
     for pp in find_exec_in_path("pkg-config"):
         try:
-            out = check_output([pp] + list(pkg_config_args) + list(packages))
+            out = check_output([pp] + list(pkg_config_args) + list(packages), stderr=open(os.devnull, "wb"))
             return out.strip().decode("utf8").split()
         except CalledProcessError:
             pass
