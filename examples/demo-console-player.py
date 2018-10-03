@@ -1,16 +1,17 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # MusicPlayer, https://github.com/albertz/music-player
 # Copyright (c) 2012, Albert Zeyer, www.az2000.de
 # All rights reserved.
 # This code is under the 2-clause BSD license, see License.txt in the root directory of this project.
 
+from __future__ import print_function
 import sys, os, random, fnmatch
 
 # Our parent path might contain a self-build musicplayer module. Use that one.
 sys.path = [os.path.abspath((os.path.dirname(__file__) or ".") + "/..")] + sys.path
 
 import musicplayer
-print "Module:", musicplayer.__file__
+print("Module:", musicplayer.__file__)
 
 # ffmpeg log levels: {0:panic, 8:fatal, 16:error, 24:warning, 32:info, 40:verbose}
 musicplayer.setFfmpegLogLevel(20)
@@ -24,16 +25,16 @@ try:
 	import faulthandler
 	faulthandler.enable(all_threads=True)
 except ImportError:
-	print "note: module faulthandler not available"
-	
+	print("note: module faulthandler not available")
+
 class Song:
 	def __init__(self, fn):
 		self.url = fn
 		self.f = open(fn)
-		
+
 	def __eq__(self, other):
 		return self.url == other.url
-	
+
 	def readPacket(self, bufSize):
 		s = self.f.read(bufSize)
 		#print "readPacket", self, bufSize, len(s)
@@ -89,26 +90,26 @@ import termios
 
 def prepareStdin():
 	fd = sys.stdin.fileno()
-	
-	if os.isatty(fd):		
+
+	if os.isatty(fd):
 		old = termios.tcgetattr(fd)
 		new = termios.tcgetattr(fd)
 		new[3] = new[3] & ~termios.ICANON & ~termios.ECHO
 		# http://www.unixguide.net/unix/programming/3.6.2.shtml
 		new[6][termios.VMIN] = 0
 		new[6][termios.VTIME] = 1
-		
+
 		termios.tcsetattr(fd, termios.TCSANOW, new)
 		termios.tcsendbreak(fd, 0)
 
 		import atexit
-		atexit.register(lambda: termios.tcsetattr(fd, termios.TCSANOW, old))	
+		atexit.register(lambda: termios.tcsetattr(fd, termios.TCSANOW, old))
 
-		print "Console control:"
-		print "  <space>:        play / pause"
-		print "  <left>/<right>: seek back/forward by 10 secs"
-		print "  <return>:       next song"
-		print "  <q>:            quit"
+		print("Console control:")
+		print("  <space>:        play / pause")
+		print("  <left>/<right>: seek back/forward by 10 secs")
+		print("  <return>:       next song")
+		print("  <q>:            quit")
 
 def getchar():
 	fd = sys.stdin.fileno()
@@ -131,7 +132,7 @@ while True:
 			formatTime(player.curSongLen))
 	else:
 		sys.stdout.write("no song")
-	
+
 	ch = getchar()
 	if ch == "\x1b[D": # left
 		player.seekRel(-10)
