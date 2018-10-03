@@ -152,7 +152,7 @@ Then call ``python setup.py build`` or ``./compile.py`` to build the Python modu
 
 The module is also registered `on PyPI <https://pypi.python.org/pypi/musicplayer>`_, so you can also install via::
 
-    easy_install musicplayer
+    pip install musicplayer
 
 .. image:: https://travis-ci.org/albertz/music-player-core.png
    :target: https://travis-ci.org/albertz/music-player-core
