@@ -1,18 +1,25 @@
 
-import os, sys
+import os
+import sys
+
 
 def sysExec(cmd):
 	print(" ".join(cmd))
 	r = os.system(" ".join(cmd))
-	if r != 0: sys.exit(r)
+	if r != 0:
+		sys.exit(r)
 
 
 def is_uptodate(outfile, depfiles=None):
-	try: outmtime = os.path.getmtime(outfile)
-	except OSError: return False
+	try:
+		outmtime = os.path.getmtime(outfile)
+	except OSError:
+		return False
 	if depfiles is None:
-		try: depfiles = get_depfiles(outfile)
-		except IOError: return False
+		try:
+			depfiles = get_depfiles(outfile)
+		except IOError:
+			return False
 	for depfn in depfiles:
 		try:
 			if os.path.getmtime(depfn) > outmtime:
@@ -20,6 +27,7 @@ def is_uptodate(outfile, depfiles=None):
 		except OSError:
 			return False
 	return True
+
 
 def get_cc_outfilename(infile):
 	# Kind of custom, not totally bullet-proof, but it's ok
@@ -31,8 +39,10 @@ def get_cc_outfilename(infile):
 	fn = fn.replace("..", "+.")
 	return fn + ".o"
 
+
 def get_depfilename(outfile):
 	return outfile + ".deps"
+
 
 def get_depfiles(outfile):
 	depfile = get_depfilename(outfile)
@@ -55,11 +65,13 @@ def get_depfiles(outfile):
 	assert lastLine
 	return fileList
 
+
 def get_mtime(filename):
 	return os.path.getmtime(filename)
 
 
 LDFLAGS = os.environ.get("LDFLAGS", "").split()
+
 
 def link(outfile, infiles, options):
 	if "--weak-linking" in options:
@@ -89,6 +101,7 @@ def link(outfile, infiles, options):
 			["-shared", "-o", outfile]
 		)
 
+
 def link_exec(outfile, infiles, options):
 	options += ["-lc", "-lc++"]
 
@@ -108,6 +121,7 @@ def link_exec(outfile, infiles, options):
 CFLAGS = os.environ.get("CFLAGS", "").split()
 CFLAGS += ["-fpic"]
 
+
 def cc_single(infile, options):
 	options = list(options)
 	ext = os.path.splitext(infile)[1]
@@ -126,10 +140,10 @@ def cc_single(infile, options):
 		["-c", infile, "-o", outfilename, "-MMD", "-MF", depfilename]
 	)
 
+
 def cc(files, options):
 	for f in files:
 		cc_single(f, options)
-
 
 
 LinkPython = False
