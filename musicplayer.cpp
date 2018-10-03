@@ -36,6 +36,7 @@
 
 
 #include "musicplayer.h"
+#include "PythonHelpers.h"
 
 #define module_name "musicplayer"
 
@@ -102,11 +103,7 @@ PyMODINIT_FUNC PyInit_musicplayer(void)
 	if(EventClass == NULL) {
 		PyObject* classDict = PyDict_New();
 		assert(classDict);
-#if PY_MAJOR_VERSION == 2
 		PyObject* className = PyString_FromString("Event");
-#else
-		PyObject* className = PyUnicode_FromString("Event");
-#endif
 		assert(className);
 #if PY_MAJOR_VERSION == 2
 		EventClass = PyClass_New(NULL, classDict, className);
@@ -127,6 +124,7 @@ PyMODINIT_FUNC PyInit_musicplayer(void)
 
 #if PY_MAJOR_VERSION == 2
 error:
+	Py_XDECREF(m);
 	return;
 #else
 	return m;

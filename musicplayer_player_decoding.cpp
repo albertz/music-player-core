@@ -113,23 +113,12 @@ static int player_read_packet(PlayerInStream* is, uint8_t* buf, int buf_size) {
 	retObj = PyObject_CallObject(readPacketFunc, args);
 	if(retObj == NULL) goto final;
 
-#if PY_MAJOR_VERSION == 2
-	if(!PyString_Check(retObj)) {
-		printf("song.readPacket didn't returned a string but a %s\n", retObj->ob_type->tp_name);
-		goto final;
-	}
-#else
 	if(!PyBytes_Check(retObj)) {
 		printf("song.readPacket didn't returned a byteobj but a %s\n", retObj->ob_type->tp_name);
 		goto final;
 	}
-#endif
 
-#if PY_MAJOR_VERSION == 2
-	ret = PyString_Size(retObj);
-#else
 	ret = PyBytes_Size(retObj);
-#endif
 	if(ret > buf_size) {
 		printf("song.readPacket returned more than buf_size\n");
 		ret = buf_size;
@@ -139,11 +128,7 @@ static int player_read_packet(PlayerInStream* is, uint8_t* buf, int buf_size) {
 		goto final;
 	}
 
-#if PY_MAJOR_VERSION == 2
-	memcpy(buf, PyString_AsString(retObj), ret);
-#else
 	memcpy(buf, PyBytes_AsString(retObj), ret);
-#endif
 
 final:
 	Py_XDECREF(retObj);
@@ -200,12 +185,9 @@ static int64_t player_seek(PlayerInStream* is, int64_t offset, int whence) {
 	if(retObj == NULL) goto final; // pass through any Python exception
 
 	// NOTE: I don't really know what would be the best strategy in case of overflow...
-#if PY_MAJOR_VERSION == 2
 	if(PyInt_Check(retObj))
 		ret = (int) PyInt_AsLong(retObj);
-	else
-#endif
-	if(PyLong_Check(retObj))
+	else if(PyLong_Check(retObj))
 		ret = (int) PyLong_AsLong(retObj);
 	else {
 		printf("song.seekRaw didn't returned an int but a %s\n", retObj->ob_type->tp_name);
@@ -467,14 +449,7 @@ static void player_setSongMetadata(PlayerInStream* player) {
 		if(strcmp("language", tag->key) == 0)
 			continue;
 
-		PyDict_SetItemString_retain(
-			player->metadata, tag->key,
-#if PY_MAJOR_VERSION == 2
-			PyString_FromString(tag->value)
-#else
-			PyUnicode_FromString(tag->value)
-#endif
-		);
+		PyDict_SetItemString_retain(player->metadata, tag->key, PyString_FromString(tag->value));
 	}
 
 	if(player->timeLen > 0) {

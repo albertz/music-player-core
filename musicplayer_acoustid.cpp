@@ -5,6 +5,7 @@
 // This code is under the 2-clause BSD license, see License.txt in the root directory of this project.
 
 #include "musicplayer.h"
+#include "PythonHelpers.h"
 #include <chromaprint.h>
 
 PyObject *
@@ -91,11 +92,7 @@ pyCalcAcoustIdFingerprint(PyObject* self, PyObject* args) {
 
 		returnObj = PyTuple_New(2);
 		PyTuple_SetItem(returnObj, 0, PyFloat_FromDouble(songDuration));
-#if PY_MAJOR_VERSION == 2
 		PyTuple_SetItem(returnObj, 1, PyString_FromString(fingerprint));
-#else
-		PyTuple_SetItem(returnObj, 1, PyUnicode_FromString(fingerprint));
-#endif
 
 		chromaprint_dealloc(fingerprint);
 	}
