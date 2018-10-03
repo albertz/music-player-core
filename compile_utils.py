@@ -152,6 +152,9 @@ UsePyPy = False
 Python3 = True
 
 
+ffmpeg_packages = ['libavutil', 'libavformat', 'libavcodec', 'libswresample']
+
+
 def get_python_linkopts():
 	if LinkPython:
 		raise NotImplementedError  # via python-config or pkg-config see below
@@ -166,6 +169,7 @@ def get_python_linkopts():
 def get_python_ccopts():
 	flags = []
 	if UsePyPy:
+		# TODO use pkg-config or so
 		flags += ["-I", "/usr/local/Cellar/pypy/1.9/include"]
 	else:
 		out = None
@@ -193,5 +197,10 @@ def get_python_ccopts():
 					"-I", "/System/Library/Frameworks/Python.framework/Headers",  # mac
 					"-I", "/usr/include/python2.7",  # common linux/unix
 				]
-	flags += ["-I", "/usr/local/opt/ffmpeg/include"]
+	try:
+		out = check_output(["pkg-config", "--cflags"] + ffmpeg_packages)
+		flags += out.strip().decode("utf8").split()
+	except CalledProcessError:
+		# fallback to some defaults
+		flags += ["-I", "/usr/local/opt/ffmpeg/include"]
 	return flags
