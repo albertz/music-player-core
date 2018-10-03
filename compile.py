@@ -18,12 +18,12 @@ staticChromaprint = False
 
 print("* Building musicplayer.so")
 
-ffmpegFiles = \
-	glob("../*.cpp") + \
-	(glob("../chromaprint/*.cpp") if staticChromaprint else [])
+ffmpeg_files = \
+	sorted(glob("../*.cpp")) + \
+	(sorted(glob("../chromaprint/*.cpp")) if staticChromaprint else [])
 
 cc(
-	ffmpegFiles,
+	ffmpeg_files,
 	[
 		"-DHAVE_CONFIG_H",
 		"-g",
@@ -34,7 +34,7 @@ cc(
 
 link(
 	"../musicplayer.so",
-	[c.get_cc_outfilename(fn) for fn in ffmpegFiles],
+	[c.get_cc_outfilename(fn) for fn in ffmpeg_files],
 	[
 		"-lavutil",
 		"-lavformat",
