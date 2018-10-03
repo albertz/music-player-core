@@ -1,6 +1,7 @@
 
 import os
 import sys
+from subprocess import check_output, CalledProcessError
 
 
 def sysExec(cmd):
@@ -153,6 +154,7 @@ Python3 = True
 
 def get_python_linkopts():
 	if LinkPython:
+		raise NotImplementedError  # via python-config or pkg-config see below
 		if sys.platform == "darwin":
 			return ["-framework", "Python"]
 		else:
@@ -166,15 +168,30 @@ def get_python_ccopts():
 	if UsePyPy:
 		flags += ["-I", "/usr/local/Cellar/pypy/1.9/include"]
 	else:
-		if Python3:
-			flags += [
-				"-I", "/usr/local/opt/python3/Frameworks/Python.framework/Versions/3.6/Headers",  # mac
-				"-I", "/usr/include/python3.6"
-			]
+		out = None
+		if not out:
+			try:
+				out = check_output(["python3-config" if Python3 else "python-config", "--cflags"])
+			except CalledProcessError:
+				pass
+		if not out:
+			try:
+				out = check_output(["pkg-config", "--cflags", "python3" if Python3 else "python"])
+			except CalledProcessError:
+				pass
+		if out:
+			flags += out.strip().decode("utf8").split()
 		else:
-			flags += [
-				"-I", "/System/Library/Frameworks/Python.framework/Headers",  # mac
-				"-I", "/usr/include/python2.7",  # common linux/unix
-			]
+			# fallback to some defaults
+			if Python3:
+				flags += [
+					"-I", "/usr/local/opt/python3/Frameworks/Python.framework/Versions/3.6/Headers",  # mac
+					"-I", "/usr/include/python3.6"
+				]
+			else:
+				flags += [
+					"-I", "/System/Library/Frameworks/Python.framework/Headers",  # mac
+					"-I", "/usr/include/python2.7",  # common linux/unix
+				]
 	flags += ["-I", "/usr/local/opt/ffmpeg/include"]
 	return flags
