@@ -37,11 +37,7 @@
 
 #include "musicplayer.h"
 
-
-
-
-
-
+#define module_name "musicplayer"
 
 
 
@@ -57,8 +53,21 @@ static PyMethodDef module_methods[] = {
 	{NULL,				NULL}	/* sentinel */
 };
 
-PyDoc_STRVAR(module_doc,
-"Music player.");
+PyDoc_STRVAR(module_doc, "Music player.");
+
+#if PY_MAJOR_VERSION >= 3
+static struct PyModuleDef module_def = {
+	PyModuleDef_HEAD_INIT,
+	module_name,     /* m_name */
+	module_doc,  /* m_doc */
+	-1,                  /* m_size */
+	module_methods,    /* m_methods */
+	NULL,                /* m_reload */
+	NULL,                /* m_traverse */
+	NULL,                /* m_clear */
+	NULL,                /* m_free */
+};
+#endif
 
 static PyObject* EventClass = NULL;
 
@@ -69,32 +78,59 @@ static void init() {
 }
 
 
-PyMODINIT_FUNC
-initmusicplayer(void)
+#if PY_MAJOR_VERSION == 2
+PyMODINIT_FUNC initmusicplayer(void)
+#else
+PyMODINIT_FUNC PyInit_musicplayer(void)
+#endif
 {
 	//printf("initmusicplayer\n");
 	init();
 	if (PyType_Ready(&Player_Type) < 0)
 		Py_FatalError("Can't initialize player type");
-	PyObject* m = Py_InitModule3("musicplayer", module_methods, module_doc);
+
+#if PY_MAJOR_VERSION == 2
+	PyObject* m = Py_InitModule3(module_name, module_methods, module_doc);
+#else
+	PyObject* m = PyModule_Create(&module_def);
+#endif
 	if(!m) {
-		Py_FatalError("Can't initialize musicplayer module");
-		return;
+		Py_FatalError("Can't initialize " module_name " module");
+		goto error;
 	}
-	
+
 	if(EventClass == NULL) {
 		PyObject* classDict = PyDict_New();
 		assert(classDict);
+#if PY_MAJOR_VERSION == 2
 		PyObject* className = PyString_FromString("Event");
+#else
+		PyObject* className = PyUnicode_FromString("Event");
+#endif
 		assert(className);
+#if PY_MAJOR_VERSION == 2
 		EventClass = PyClass_New(NULL, classDict, className);
+#else
+		PyObject* classBases = PyTuple_New(0);
+		EventClass = PyObject_CallFunctionObjArgs((PyObject *)&PyType_Type, className, classBases, classDict, NULL);
+		Py_XDECREF(classBases);
+#endif
 		assert(EventClass);
 		Py_XDECREF(classDict); classDict = NULL;
 		Py_XDECREF(className); className = NULL;
 	}
-	
+
 	if(EventClass) {
 		Py_INCREF(EventClass);
 		PyModule_AddObject(m, "Event", EventClass); // takes the ref
 	}
+
+#if PY_MAJOR_VERSION == 2
+error:
+	return;
+#else
+	return m;
+error:
+	return NULL;
+#endif
 }
