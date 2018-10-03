@@ -35,13 +35,6 @@ cc(
 link(
 	"../musicplayer.so",
 	[c.get_cc_outfilename(fn) for fn in ffmpeg_files],
-	[
-		"-lavutil",
-		"-lavformat",
-		"-lavcodec",
-		"-lswresample",
-		"-lportaudio",
-	] +
 	get_python_linkopts() +
 	([] if StaticChromaprint else ["-lchromaprint"])
 )

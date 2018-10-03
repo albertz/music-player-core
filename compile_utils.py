@@ -80,7 +80,7 @@ LDFLAGS = os.environ.get("LDFLAGS", "").split()
 def link(outfile, infiles, options):
     if "--weak-linking" in options:
         idx = options.index("--weak-linking")
-        options[idx:idx + 1] = ["-undefined", "dynamic_lookup"]
+        options[idx:idx + 1] = []  # ["-undefined", "dynamic_lookup"]
 
     if is_uptodate(outfile, depfiles=infiles):
         print("up-to-date:", outfile)
@@ -96,7 +96,7 @@ def link(outfile, infiles, options):
         )
     else:
         sys_exec(
-            ["ld"] +
+            ["cc"] +  # use "cc" instead of "ld", to be sure that we have the right options
             ["-L/usr/local/lib"] +
             infiles +
             options +
@@ -182,7 +182,9 @@ def get_pkg_config(pkg_config_args, *packages):
     # Maybe we have multiple pkg-config, and maybe some of them finds it.
     for pp in find_exec_in_path("pkg-config"):
         try:
-            out = check_output([pp] + list(pkg_config_args) + list(packages), stderr=open(os.devnull, "wb"))
+            cmd = [pp] + list(pkg_config_args) + list(packages)
+            #print(" ".join(cmd))
+            out = check_output(cmd, stderr=open(os.devnull, "wb"))
             return out.strip().decode("utf8").split()
         except CalledProcessError:
             pass
@@ -190,12 +192,30 @@ def get_pkg_config(pkg_config_args, *packages):
 
 
 def get_python_linkopts():
+    flags = []
     if LinkPython:
+        # TODO: also python-config, like in ..._ccopts
         link_opts = get_pkg_config("--libs", "python3" if Python3 else "python")
         assert link_opts is not None, "pkg-config failed"
-        return link_opts
+        flags += link_opts
     else:
-        return ["--weak-linking"]
+        flags += ["--weak-linking"]
+    pkg_flags = get_pkg_config("--libs", *ffmpeg_packages)
+    if pkg_flags is not None:
+        flags += pkg_flags
+    else:
+        flags += [
+            "-lavutil",
+            "-lavformat",
+            "-lavcodec",
+            "-lswresample",
+            "-lportaudio"]
+    pkg_flags = get_pkg_config("--libs", "portaudio")
+    if pkg_flags is not None:
+        flags += pkg_flags
+    else:
+        flags += ["-lportaudio"]
+    return flags
 
 
 def get_python_ccopts():
