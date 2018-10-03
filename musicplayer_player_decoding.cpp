@@ -1456,7 +1456,7 @@ static void ThreadHangDetector_unregisterCurThread() {
 }
 
 
-void PlayerObject::workerProc(boost::atomic<bool>& stopSignal) {
+void PlayerObject::workerProc(std::atomic<bool>& stopSignal) {
 	setCurThreadName("musicplayer.so worker");
 	ThreadHangDetector_registerCurThread("musicplayer.so worker", 5);
 
