@@ -19,7 +19,7 @@
 
 bool PlayerObject::getNextSong(bool skipped, bool maybeFade) {
 	PlayerObject* player = this;
-	
+
 	// We must hold the player lock here.
 
 	if(maybeFade) {
@@ -30,7 +30,7 @@ bool PlayerObject::getNextSong(bool skipped, bool maybeFade) {
 			if(is->playerStartedPlaying && player->fader.sampleFactor() != 0) {
 				// Let it fade out.
 				player->fader.change(-1, player->outSamplerate, false);
-				
+
 				// Delay skip. The worker-proc will handle it.
 				// This will also fade it in again.
 				is->skipMe = true;
@@ -47,37 +47,37 @@ bool PlayerObject::getNextSong(bool skipped, bool maybeFade) {
 		usleep(100);
 	}
 	pyQueueLock = true;
-		
+
 	bool ret = false;
 	bool errorOnOpening = false;
-	
+
 	PyObject* oldSong = player->curSong;
 	player->curSong = NULL;
 
 	{
 		PyScopedGIL gstate;
-		
+
 		if(player->queue == NULL) {
 			PyErr_SetString(PyExc_RuntimeError, "player queue is not set");
 			goto final;
 		}
-		
+
 		// Note: No PyIter_Check because it adds CPython 2.7 ABI dependency when
 		// using CPython 2.7 headers. Anyway, just calling PyIter_Next directly
 		// is also ok since it will do the check itself.
-		
+
 		PyObject* newSong = PyIter_Next(player->queue);
-		
+
 		if(PyErr_Occurred()) { // pass through any Python errors
 			Py_XDECREF(newSong);
 			goto final;
 		}
-		
+
 		if(!newSong) {
-			PyErr_SetString(PyExc_RuntimeError, "player queue does not have more songs");		
+			PyErr_SetString(PyExc_RuntimeError, "player queue does not have more songs");
 			goto final;
 		}
-		
+
 		assert(newSong);
 		player->curSong = newSong;
 	}
@@ -93,7 +93,7 @@ bool PlayerObject::getNextSong(bool skipped, bool maybeFade) {
 			errorOnOpening = true;
 		}
 	}
-	
+
 	// make callback onSongChange
 	if(player->dict) {
 		PyScopedGIL gstate;
@@ -109,19 +109,19 @@ bool PlayerObject::getNextSong(bool skipped, bool maybeFade) {
 			PyDict_SetItemString(kwargs, "newSong", player->curSong);
 			PyDict_SetItemString_retain(kwargs, "skipped", PyBool_FromLong(skipped));
 			PyDict_SetItemString_retain(kwargs, "errorOnOpening", PyBool_FromLong(errorOnOpening));
-			
+
 			PyObject* retObj = PyEval_CallObjectWithKeywords(onSongChange, NULL, kwargs);
 			Py_XDECREF(retObj);
-			
+
 			// errors are not fatal from the callback, so handle it now and go on
 			if(PyErr_Occurred()) {
 				PyErr_Print(); // prints traceback to stderr, resets error indicator. also handles sys.excepthook if it is set (see pythonrun.c, it's not said explicitely in the docs)
 			}
-			
+
 			Py_DECREF(kwargs);
 		}
 	}
-		
+
 final:
 	{
 		PyScopedGIL gstate;
@@ -129,7 +129,7 @@ final:
 	}
 
 	pyQueueLock = false;
-	
+
 	if(ret && nextSongOnEof)
 		openPeekInStreams();
 	return ret;
@@ -178,27 +178,27 @@ PyObject* player_alloc(PyTypeObject *type, Py_ssize_t nitems) {
     PyObject *obj;
     const size_t size = _PyObject_VAR_SIZE(type, nitems+1);
     /* note that we need to add one, for the sentinel */
-	
+
     if (PyType_IS_GC(type))
         obj = _PyObject_GC_Malloc(size);
     else
         obj = (PyObject *)PyObject_MALLOC(size);
-	
+
     if (obj == NULL)
         return PyErr_NoMemory();
-	
+
 	// This is why we need this custom alloc: To call the C++ constructor.
     memset(obj, '\0', size);
 	new ((PlayerObject*) obj) PlayerObject();
-	
+
     if (type->tp_flags & Py_TPFLAGS_HEAPTYPE)
         Py_INCREF(type);
-	
+
     if (type->tp_itemsize == 0)
         PyObject_INIT(obj, type);
     else
         (void) PyObject_INIT_VAR((PyVarObject *)obj, type, nitems);
-	
+
     if (PyType_IS_GC(type))
         _PyObject_GC_TRACK(obj);
     return obj;
@@ -208,7 +208,7 @@ static
 int player_init(PyObject* self, PyObject* args, PyObject* kwds) {
 	PlayerObject* player = (PlayerObject*) self;
 	//printf("%p player init\n", player);
-	
+
 	mlock(player, sizeof(*player));
 	player->nextSongOnEof = 1;
 	player->skipPyExceptions = 1;
@@ -217,7 +217,7 @@ int player_init(PyObject* self, PyObject* args, PyObject* kwds) {
 	player->volumeSmoothClip.setX(0.95f, 10.0f);
 	player->soundcardOutputEnabled = true;
 	player->outOfSync = true;
-	
+
 	player->openStreamLock = player->pyQueueLock = false;
 
 	{
@@ -228,9 +228,9 @@ int player_init(PyObject* self, PyObject* args, PyObject* kwds) {
 		player->setAudioTgt(SAMPLERATE, NUMCHANNELS);
 		player->lock.enabled = true;
 	}
-	
+
 	player->workerThread.func = boost::bind(&PlayerObject::workerProc, player, _1);
-	
+
 	return 0;
 }
 
@@ -238,7 +238,7 @@ static
 void player_dealloc(PyObject* obj) {
 	PlayerObject* player = (PlayerObject*)obj;
 	//printf("%p dealloc\n", player);
-		
+
 	// first, destroy any non-python threads
 	Py_BEGIN_ALLOW_THREADS
 	{
@@ -246,22 +246,22 @@ void player_dealloc(PyObject* obj) {
 		player->outStream.reset();
 	}
 	Py_END_ALLOW_THREADS
-	
+
 	{
 		// we don't need a lock because in dealloc, we have the only ref to this PlayerObject.
 		// also, we must not lock it here because we cannot free inStream otherwise.
 
 		player->inStreams.clear();
-		
+
 		Py_XDECREF(player->dict);
 		player->dict = NULL;
-		
+
 		Py_XDECREF(player->curSong);
 		player->curSong = NULL;
-		
+
 		Py_XDECREF(player->queue);
 		player->queue = NULL;
-		
+
 		Py_XDECREF(player->peekQueue);
 		player->peekQueue = NULL;
 	}
@@ -430,24 +430,24 @@ PyObject* player_method_readOutStream(PyObject* self, PyObject* args, PyObject* 
 		PyErr_SetString(PyExc_RuntimeError, "cannot use readOutStream while not playing");
 		return NULL;
 	}
-	
+
 	size_t size = num * OUTSAMPLEBYTELEN;
-	PyObject* buffer = PyString_FromStringAndSize(NULL, size);
+	PyObject* buffer = PyBytes_FromStringAndSize(NULL, size);
 	if(!buffer) return NULL;
-	memset(PyString_AS_STRING(buffer), 0, size);
+	memset(PyBytes_AS_STRING(buffer), 0, size);
 	size_t sampleOutNum = 0;
 
 	Py_INCREF(self);
 	Py_BEGIN_ALLOW_THREADS
 	{
 		PyScopedLock lock(player->lock);
-		player->readOutStream((OUTSAMPLE_t*)PyString_AS_STRING(buffer), num, &sampleOutNum);
+		player->readOutStream((OUTSAMPLE_t*)PyBytes_AS_STRING(buffer), num, &sampleOutNum);
 	}
 	Py_END_ALLOW_THREADS
 	Py_DECREF(self);
 
 	// if _PyString_Resize fails, it sets buffer=NULL, so we have the correct error behavior
-	_PyString_Resize(&buffer, sampleOutNum * OUTSAMPLEBYTELEN);
+	_PyBytes_Resize(&buffer, sampleOutNum * OUTSAMPLEBYTELEN);
 	return buffer;
 }
 
@@ -503,13 +503,13 @@ static
 PyObject* player_getattr(PyObject* obj, char* key) {
 	PlayerObject* player = (PlayerObject*)obj;
 	//printf("%p getattr %s\n", player, key);
-	
+
 	if(strcmp(key, "__dict__") == 0) {
 		PyObject* dict = player_getdict(player);
 		Py_XINCREF(dict);
 		return dict;
 	}
-	
+
 	if(strcmp(key, "__members__") == 0) {
 		const Py_ssize_t C = 25;
 		PyObject* mlist = PyList_New(C);
@@ -532,7 +532,7 @@ PyObject* player_getattr(PyObject* obj, char* key) {
 		PyList_SetItem(mlist, i++, PyString_FromString("volume"));
 		PyList_SetItem(mlist, i++, PyString_FromString("volumeSmoothClip"));
 		PyList_SetItem(mlist, i++, PyString_FromString("volumeAdjustEnabled"));
-		PyList_SetItem(mlist, i++, PyString_FromString("outSampleFormat"));		
+		PyList_SetItem(mlist, i++, PyString_FromString("outSampleFormat"));
 		PyList_SetItem(mlist, i++, PyString_FromString("outSamplerate"));
 		PyList_SetItem(mlist, i++, PyString_FromString("outNumChannels"));
 		PyList_SetItem(mlist, i++, PyString_FromString("preferredSoundDevice"));
@@ -542,7 +542,7 @@ PyObject* player_getattr(PyObject* obj, char* key) {
 		assert(i == C);
 		return mlist;
 	}
-	
+
 	if(strcmp(key, "queue") == 0) {
 		if(player->queue) {
 			Py_INCREF(player->queue);
@@ -558,7 +558,7 @@ PyObject* player_getattr(PyObject* obj, char* key) {
 		}
 		goto returnNone;
 	}
-	
+
 	if(strcmp(key, "playing") == 0) {
 		return PyBool_FromLong(player->playing);
 	}
@@ -579,19 +579,19 @@ PyObject* player_getattr(PyObject* obj, char* key) {
 		}
 		goto returnNone;
 	}
-	
+
 	if(strcmp(key, "curSongPos") == 0) {
 		if(player->isInStreamOpened())
 			return PyFloat_FromDouble(player->curSongPos());
 		goto returnNone;
 	}
-	
+
 	if(strcmp(key, "curSongLen") == 0) {
 		if(player->isInStreamOpened() && player->curSongLen() > 0)
 			return PyFloat_FromDouble(player->curSongLen());
 		goto returnNone;
 	}
-	
+
 	if(strcmp(key, "curSongMetadata") == 0) {
 		if(player->curSongMetadata()) {
 			Py_INCREF(player->curSongMetadata());
@@ -599,25 +599,25 @@ PyObject* player_getattr(PyObject* obj, char* key) {
 		}
 		goto returnNone;
 	}
-	
+
 	if(strcmp(key, "curSongGainFactor") == 0) {
 		if(player->isInStreamOpened())
 			return PyFloat_FromDouble(player->curSongGainFactor());
 		goto returnNone;
 	}
-	
+
 	if(strcmp(key, "seekAbs") == 0) {
 		return PyCFunction_New(&md_seekAbs, (PyObject*) player);
 	}
-	
+
 	if(strcmp(key, "seekRel") == 0) {
 		return PyCFunction_New(&md_seekRel, (PyObject*) player);
 	}
-	
+
 	if(strcmp(key, "nextSong") == 0) {
 		return PyCFunction_New(&md_nextSong, (PyObject*) player);
 	}
-	
+
 	if(strcmp(key, "reloadPeekStreams") == 0) {
 		return PyCFunction_New(&md_reloadPeekStreams, (PyObject*) player);
 	}
@@ -629,33 +629,33 @@ PyObject* player_getattr(PyObject* obj, char* key) {
 	if(strcmp(key, "readOutStream") == 0) {
 		return PyCFunction_New(&md_readOutStream, (PyObject*) player);
 	}
-	
+
 	if(strcmp(key, "volume") == 0) {
 		return PyFloat_FromDouble(player->volume);
 	}
-	
+
 	if(strcmp(key, "volumeSmoothClip") == 0) {
 		PyObject* t = PyTuple_New(2);
 		PyTuple_SetItem(t, 0, PyFloat_FromDouble(player->volumeSmoothClip.x1));
 		PyTuple_SetItem(t, 1, PyFloat_FromDouble(player->volumeSmoothClip.x2));
 		return t;
 	}
-	
+
 	if(strcmp(key, "volumeAdjustEnabled") == 0) {
 		return PyBool_FromLong(player->volumeAdjustEnabled);
 	}
-	
+
 	if(strcmp(key, "outSampleFormat") == 0) {
 		PyObject* t = PyTuple_New(2);
 		PyTuple_SetItem(t, 0, PyString_FromString(OUTSAMPLEFORMATSTR));
 		PyTuple_SetItem(t, 1, PyInt_FromLong(OUTSAMPLEBITLEN));
 		return t;
 	}
-	
+
 	if(strcmp(key, "outSamplerate") == 0) {
 		return PyInt_FromLong(player->outSamplerate);
 	}
-	
+
 	if(strcmp(key, "outNumChannels") == 0) {
 		return PyInt_FromLong(player->outNumChannels);
 	}
@@ -663,7 +663,7 @@ PyObject* player_getattr(PyObject* obj, char* key) {
 	if(strcmp(key, "preferredSoundDevice") == 0) {
 		return PyString_FromString(player->preferredSoundDevice.c_str());
 	}
-	
+
 	if(strcmp(key, "actualSoundDevice") == 0) {
 		return PyString_FromString(player->getSoundDevice().c_str());
 	}
@@ -675,7 +675,7 @@ PyObject* player_getattr(PyObject* obj, char* key) {
 	if(strcmp(key, "nextSongOnEof") == 0) {
 		return PyBool_FromLong(player->nextSongOnEof);
 	}
-	
+
 	{
 		PyObject* dict = player_getdict(player);
 		if(dict) { // should always be true...
@@ -689,10 +689,10 @@ PyObject* player_getattr(PyObject* obj, char* key) {
 			Py_DECREF(dict);
 		}
 	}
-	
+
 	PyErr_Format(PyExc_AttributeError, "PlayerObject has no attribute '%.400s'", key);
 	return NULL;
-	
+
 returnNone:
 	Py_INCREF(Py_None);
 	return Py_None;
@@ -702,7 +702,7 @@ static
 int player_setattr(PyObject* obj, char* key, PyObject* value) {
 	PlayerObject* player = (PlayerObject*)obj;
 	//printf("%p setattr %s %p\n", player, key, value);
-	
+
 	if(strcmp(key, "queue") == 0) {
 		return player_setqueue(player, value);
 	}
@@ -710,13 +710,13 @@ int player_setattr(PyObject* obj, char* key, PyObject* value) {
 	if(strcmp(key, "peekQueue") == 0) {
 		return player_setpeekqueue(player, value);
 	}
-	
+
 	if(strcmp(key, "playing") == 0) {
 		PyScopedGIUnlock gunlock;
 		PyScopedLock lock(player->lock);
 		return player->setPlaying(PyObject_IsTrue(value));
 	}
-		
+
 	if(strcmp(key, "volume") == 0) {
 		if(!PyArg_Parse(value, "f", &player->volume))
 			return -1;
@@ -724,7 +724,7 @@ int player_setattr(PyObject* obj, char* key, PyObject* value) {
 		if(player->volume > 5) player->volume = 5; // Well, this limit is made up. But it makes sense to have a limit somewhere...
 		return 0;
 	}
-	
+
 	if(strcmp(key, "volumeSmoothClip") == 0) {
 		float x1, x2;
 		if(!PyArg_ParseTuple(value, "ff", &x1, &x2))
@@ -737,12 +737,12 @@ int player_setattr(PyObject* obj, char* key, PyObject* value) {
 		player->volumeAdjustEnabled = PyObject_IsTrue(value);
 		return 0;
 	}
-	
+
 	if(strcmp(key, "outSampleFormat") == 0) {
 		PyErr_SetString(PyExc_AttributeError, "outSampleFormat is readonly (hardcoded) for now");
 		return -1;
 	}
-	
+
 	if(strcmp(key, "outSamplerate") == 0) {
 		if(player->playing) {
 			PyErr_SetString(PyExc_RuntimeError, "cannot set outSamplerate while playing");
@@ -758,7 +758,7 @@ int player_setattr(PyObject* obj, char* key, PyObject* value) {
 		}
 		return 0;
 	}
-	
+
 	if(strcmp(key, "outNumChannels") == 0) {
 		if(player->playing) {
 			PyErr_SetString(PyExc_RuntimeError, "cannot set outNumChannels while playing");
@@ -788,7 +788,7 @@ int player_setattr(PyObject* obj, char* key, PyObject* value) {
 		}
 		return 0;
 	}
-	
+
 	if(strcmp(key, "actualSoundDevice") == 0) {
 		PyErr_SetString(PyExc_AttributeError, "actualSoundDevice is readonly");
 		return -1;
@@ -807,7 +807,7 @@ int player_setattr(PyObject* obj, char* key, PyObject* value) {
 		player->nextSongOnEof = PyObject_IsTrue(value);
 		return 0;
 	}
-	
+
 	PyObject* s = PyString_FromString(key);
 	if(!s) return -1;
 	int ret = PyObject_GenericSetAttr(obj, s, value);
@@ -863,15 +863,15 @@ pyCreatePlayer(PyObject* self) {
 	PyTypeObject* type = &Player_Type;
 	PyObject *obj = NULL, *args = NULL, *kwds = NULL;
 	args = PyTuple_Pack(0);
-	
+
 	obj = type->tp_new(type, args, kwds);
 	if(obj == NULL) goto final;
-	
+
 	if(type->tp_init && type->tp_init(obj, args, kwds) < 0) {
 		Py_DECREF(obj);
 		obj = NULL;
 	}
-	
+
 final:
 	Py_XDECREF(args);
 	Py_XDECREF(kwds);

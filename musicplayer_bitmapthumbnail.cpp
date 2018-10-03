@@ -5,6 +5,7 @@
 // This code is under the 2-clause BSD license, see License.txt in the root directory of this project.
 
 #include "musicplayer.h"
+#include "PythonHelpers.h"
 
 extern "C" {
 #include <libavformat/avformat.h>
@@ -18,34 +19,34 @@ extern "C" {
 static
 PyObject* createBitmap24Bpp(int w, int h, char** imgDataStart) {
 	assert(imgDataStart);
-	
+
 	// http://en.wikipedia.org/wiki/BMP_file_format
-	
+
 	static const int FileHeaderSize = 14;
 	static const int InfoHeaderSize = 40; // format BITMAPINFOHEADER
 	size_t bmpSize = FileHeaderSize + InfoHeaderSize + ALIGN4(3 * w) * h;
-	PyObject* bmp = PyString_FromStringAndSize(NULL, bmpSize);
+	PyObject* bmp = PyBytes_FromStringAndSize(NULL, bmpSize);
 	if(!bmp) return NULL;
-	memset(PyString_AS_STRING(bmp), 0, bmpSize);
-	
-	unsigned char* bmpfileheader = (unsigned char*) PyString_AS_STRING(bmp);
+	memset(PyBytes_AS_STRING(bmp), 0, bmpSize);
+
+	unsigned char* bmpfileheader = (unsigned char*) PyBytes_AS_STRING(bmp);
 	unsigned char* bmpinfoheader = bmpfileheader + FileHeaderSize;
 	*imgDataStart = (char*) bmpinfoheader + InfoHeaderSize;
-	
+
 	// header field
 	bmpfileheader[ 0] = 'B';
 	bmpfileheader[ 1] = 'M';
-	
+
 	bmpfileheader[ 2] = (unsigned char)(bmpSize    );
 	bmpfileheader[ 3] = (unsigned char)(bmpSize>> 8);
 	bmpfileheader[ 4] = (unsigned char)(bmpSize>>16);
 	bmpfileheader[ 5] = (unsigned char)(bmpSize>>24);
-	
+
 	assert(FileHeaderSize + InfoHeaderSize < 256);
 	bmpfileheader[10] = FileHeaderSize + InfoHeaderSize; // starting address of image data (32bit)
-	
+
 	bmpinfoheader[ 0] = InfoHeaderSize; // size of info header. (32bit)
-	
+
 	bmpinfoheader[ 4] = (unsigned char)(w    );
 	bmpinfoheader[ 5] = (unsigned char)(w>> 8);
 	bmpinfoheader[ 6] = (unsigned char)(w>>16);
@@ -54,10 +55,10 @@ PyObject* createBitmap24Bpp(int w, int h, char** imgDataStart) {
 	bmpinfoheader[ 9] = (unsigned char)(h>> 8);
 	bmpinfoheader[10] = (unsigned char)(h>>16);
 	bmpinfoheader[11] = (unsigned char)(h>>24);
-	
+
 	bmpinfoheader[12] = 1; // num of color planes. must be 1 (16bit)
 	bmpinfoheader[14] = 24; // bpp (16bit)
-	
+
 	return bmp;
 }
 
@@ -152,12 +153,12 @@ pyCalcBitmapThumbnail(PyObject* self, PyObject* args, PyObject* kws) {
 									&procCallback,
 									&volume, &volumeSmoothClipX1, &volumeSmoothClipX2))
 		return NULL;
-	
+
 	char* img = NULL;
 	PyObject* bmp = createBitmap24Bpp(bmpWidth, bmpHeight, &img);
 	if(!bmp)
 		return NULL; // out of memory
-	
+
 	RDFTContext* fftCtx = NULL;
 	float* samplesBuf = NULL;
 	PyObject* returnObj = NULL;
@@ -166,7 +167,7 @@ pyCalcBitmapThumbnail(PyObject* self, PyObject* args, PyObject* kws) {
 	double songDuration = 0;
 	double samplesPerPixel = 0;
 	unsigned long frame = 0;
-	
+
 	player = (PlayerObject*) pyCreatePlayer(NULL);
 	if(!player) goto final;
 	player->lock.enabled = false;
@@ -178,20 +179,20 @@ pyCalcBitmapThumbnail(PyObject* self, PyObject* args, PyObject* kws) {
 	Py_INCREF(songObj);
 	player->curSong = songObj;
 	if(!player->openInStream()) goto final;
-	
+
 	// First count totalFrameCount.
 	while(player->processInStream()) {
 		if(PyErr_Occurred()) goto final;
-		
+
 		totalFrameCount += player->inStreamBuffer()->size() / player->outNumChannels / OUTSAMPLEBYTELEN;
 		player->inStreamBuffer()->clear();
 	}
 	songDuration = (double)totalFrameCount / player->outSamplerate;
-	
+
 	// Seek back.
 	player->seekSong(0.0, false);
 	if(PyErr_Occurred()) goto final;
-	
+
 	// init the processor
 #define fftSizeLog2 (11)
 #define fftSize (1 << fftSizeLog2)
@@ -207,19 +208,19 @@ pyCalcBitmapThumbnail(PyObject* self, PyObject* args, PyObject* kws) {
 	// Note: We have to use av_mallocz here to have the right mem alignment.
 	// That is also why we can't allocate it on the stack (without doing alignment).
 	samplesBuf = (float *)av_mallocz(sizeof(float) * fftSize);
-	
+
 	samplesPerPixel = totalFrameCount / (double)bmpWidth;
-	
+
 	for(int x = 0; x < bmpWidth; ++x) {
-		
+
 		// draw background
 		for(int y = 0; y < bmpHeight; ++y)
 			bmpSetPixel(img, bmpWidth, x, y, bgR, bgG, bgB);
-		
+
 		// call the callback every 60 secs
 		if(procCallback && (int)(songDuration * x / bmpWidth / 60) < (int)(songDuration * (x+1) / bmpWidth / 60)) {
 			PyGILState_STATE gstate = PyGILState_Ensure();
-			
+
 			Py_INCREF(bmp);
 			Py_INCREF(songObj);
 			PyObject* args = PyTuple_New(4);
@@ -240,55 +241,55 @@ pyCalcBitmapThumbnail(PyObject* self, PyObject* args, PyObject* kws) {
 				stop = 1;
 			Py_XDECREF(retObj);
 			Py_DECREF(args); // this also decrefs song and bmp
-			
+
 			if(stop) {
 				Py_DECREF(bmp);
 				bmp = NULL;
 			}
-			
+
 			PyGILState_Release(gstate);
-			
+
 			if(stop) goto final;
 		}
-		
+
 		if((int)(songDuration * x / bmpWidth / timelineSecInterval) < (int)(songDuration * (x+1) / bmpWidth / timelineSecInterval)) {
 			// draw timeline
 			for(int y = 0; y < bmpHeight; ++y)
 				bmpSetPixel(img, bmpWidth, x, y, timeR, timeG, timeB);
 		}
-		
+
 		int samplesBufIndex = 0;
 		memset(samplesBuf, 0, sizeof(float) * fftSize);
-		
+
 		float peakMin = 0, peakMax = 0;
 		while(frame < (x + 1) * samplesPerPixel) {
 			if(!player->processInStream())
 				break; // probably EOF or so
 			if(PyErr_Occurred()) goto final;
-			
+
 			for(auto& it : player->inStreamBuffer()->chunks) {
 				assert(it.size() % OUTSAMPLEBYTELEN == 0);
 				for(size_t i = 0; i < it.size() / OUTSAMPLEBYTELEN; ++i) {
 					OUTSAMPLE_t* sampleAddr = (OUTSAMPLE_t*) it.pt() + i;
 					OUTSAMPLE_t sample = *sampleAddr; // TODO: endian swap?
 					float sampleFloat = OutSampleAsFloat(sample);
-					
+
 					if(sampleFloat < peakMin) peakMin = sampleFloat;
 					if(sampleFloat > peakMax) peakMax = sampleFloat;
-					
+
 					if(samplesBufIndex < fftSize) {
 						samplesBuf[samplesBufIndex] += sampleFloat * freqWindow[samplesBufIndex] * 0.5f /* we do this twice for each channel */;
 					}
 					if(i % 2 == 1) samplesBufIndex++;
 				}
-				
+
 				frame += it.size() / player->outNumChannels / OUTSAMPLEBYTELEN;
 			}
 			player->inStreamBuffer()->clear();
 		}
-		
+
 		av_rdft_calc(fftCtx, samplesBuf);
-		
+
 		float absFftData[fftSize / 2 + 1];
 		float *in_ptr = samplesBuf;
 		float *out_ptr = absFftData;
@@ -300,11 +301,11 @@ pyCalcBitmapThumbnail(PyObject* self, PyObject* args, PyObject* kws) {
 			*out_ptr++ = in_ptr[0] * in_ptr[0] + in_ptr[1] * in_ptr[1];
 			in_ptr += 2;
 		}
-		
+
 		float energy = 0;
 		for(int i = 0; i < fftSize / 2; ++i)
 			energy += absFftData[i];
-		
+
 		// compute the spectral centroid in hertz
 		float spectralCentroid = 0;
 		for(int i = 0; i < fftSize / 2; ++i)
@@ -313,50 +314,50 @@ pyCalcBitmapThumbnail(PyObject* self, PyObject* args, PyObject* kws) {
 		spectralCentroid /= fftSize / 2;
 		spectralCentroid *= player->outSamplerate;
 		spectralCentroid *= 0.5;
-		
+
 		// clip
 		static const float lowerFreq = 100;
 		static const float higherFreq = 22050;
 		if(spectralCentroid < lowerFreq) spectralCentroid = lowerFreq;
 		if(spectralCentroid > higherFreq) spectralCentroid = higherFreq;
-		
+
 		// apply log so it's proportional to human perception of frequency
 		spectralCentroid = log10(spectralCentroid);
-		
+
 		// scale to [0,1]
 		spectralCentroid -= log10(lowerFreq);
 		spectralCentroid /= (log10(higherFreq) - log10(lowerFreq));
-		
+
 		//printf("x %i, peak %f,%f, spec %f\n", x, peakMin, peakMax, spectralCentroid);
-		
+
 		// get color from spectralCentroid
 		unsigned char r = 0, g = 0, b = 0;
 		rainbowColor(spectralCentroid, &r, &g, &b);
-		
+
 		int y1 = bmpHeight * 0.5 + peakMin * (bmpHeight - 4) * 0.5;
 		int y2 = bmpHeight * 0.5 + peakMax * (bmpHeight - 4) * 0.5;
 		if(y1 < 0) y1 = 0;
 		if(y2 >= bmpHeight) y2 = bmpHeight - 1;
-		
+
 		// draw line
 		for(int y = y1; y <= y2; ++y)
 			bmpSetPixel(img, bmpWidth, x, y, r, g, b);
 	}
-	
+
 	// We have to hold the Python GIL for this block
 	// because of the callback, other Python code/threads
 	// might have references to bmp.
 	{
 		PyGILState_STATE gstate = PyGILState_Ensure();
-		
+
 		returnObj = PyTuple_New(2);
 		PyTuple_SetItem(returnObj, 0, PyFloat_FromDouble(songDuration));
 		PyTuple_SetItem(returnObj, 1, bmp);
 		bmp = NULL; // returnObj has taken over the reference
-		
+
 		PyGILState_Release(gstate);
 	}
-	
+
 final:
 	Py_XDECREF(bmp); // this is multithreading safe in all cases where bmp != NULL
 	if(fftCtx)
