@@ -1,8 +1,11 @@
 #ifndef MP_PROTECTION_UNUSED_HPP
 #define MP_PROTECTION_UNUSED_HPP
 
+#include <memory>
+#include "NonCopyAble.hpp"
 
-struct ProtectionData : boost::noncopyable {
+
+struct ProtectionData : noncopyable {
 	PyMutex mutex;
 	uint16_t lockCounter;
 	long lockThreadIdent;
@@ -12,13 +15,13 @@ struct ProtectionData : boost::noncopyable {
 	void unlock();
 };
 
-typedef boost::shared_ptr<ProtectionData> ProtectionPtr;
-struct Protection : boost::noncopyable {
+typedef std::shared_ptr<ProtectionData> ProtectionPtr;
+struct Protection : noncopyable {
 	ProtectionPtr prot;
 	Protection() : prot(new ProtectionData) {}
 };
 
-struct ProtectionScope : boost::noncopyable {
+struct ProtectionScope : noncopyable {
 	ProtectionPtr prot;
 	ProtectionScope(const Protection& p);
 	~ProtectionScope();

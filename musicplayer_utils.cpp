@@ -11,31 +11,49 @@
 
 
 
-
-
 // this is mostly safe to call.
 // returns a newly allocated c-string.
 char* objStrDup(PyObject* obj) {
 	PyGILState_STATE gstate = PyGILState_Ensure();
 	const char* str = NULL;
+	char* res = NULL;
 	PyObject* earlierError = PyErr_Occurred();
 	if(!obj)
 		str = "<None>";
+#if PY_MAJOR_VERSION == 2
 	else if(PyString_Check(obj))
 		str = PyString_AsString(obj);
+#else
+	else if(PyBytes_Check(obj)) {
+		res = (char*) malloc(PyBytes_GET_SIZE(obj) + 1);
+		memcpy(res, PyBytes_AS_STRING(obj), PyBytes_GET_SIZE(obj));
+		res[PyBytes_GET_SIZE(obj)] = 0;
+	}
+#endif
 	else {
 		PyObject* strObj = NULL;
 		if(PyUnicode_Check(obj))
 			strObj = PyUnicode_AsUTF8String(obj);
 		else {
+#if PY_MAJOR_VERSION == 2
 			PyObject* unicodeObj = PyObject_Unicode(obj);
+#else
+			PyObject* unicodeObj = PyObject_Str(obj);
+#endif
 			if(unicodeObj) {
 				strObj = PyUnicode_AsUTF8String(unicodeObj);
 				Py_DECREF(unicodeObj);
 			}
 		}
 		if(strObj) {
+#if PY_MAJOR_VERSION == 2
 			str = PyString_AsString(strObj);
+			res = strdup(str);
+#else
+			res = (char*) malloc(PyBytes_GET_SIZE(strObj) + 1);
+			memcpy(res, PyBytes_AS_STRING(strObj), PyBytes_GET_SIZE(strObj));
+			res[PyBytes_GET_SIZE(strObj)] = 0;
+#endif
 			Py_DECREF(strObj);
 		}
 		else
@@ -43,10 +61,12 @@ char* objStrDup(PyObject* obj) {
 	}
 	if(!earlierError && PyErr_Occurred())
 		PyErr_Print();
-	assert(str);
-	char* str2 = strdup(str);
+	if(!res) {
+		assert(str);
+		res = strdup(str);
+	}
 	PyGILState_Release(gstate);
-	return str2;
+	return res;
 }
 
 // returns a newly allocated c-string.
@@ -102,7 +122,7 @@ const char* getStackSymbol(void* pt) {
 	while(*s && *s != ' ') ++s; // advance the number
 	while(*s && *s == ' ') ++s; // advance the spaces
 	while(*s && *s != ' ') ++s; // advance the filename
-	while(*s && *s == ' ') ++s; // advance the spaces	
+	while(*s && *s == ' ') ++s; // advance the spaces
 	return s;
 }
 
@@ -301,7 +321,7 @@ void setCurThreadName(const std::string& name)
 		DWORD dwThreadID; // Thread ID (-1=caller thread).
 		DWORD dwFlags; // Reserved for future use, must be zero.
 	} THREADNAME_INFO;
-	
+
 	THREADNAME_INFO info;
 	{
 		info.dwType = 0x1000;
@@ -309,7 +329,7 @@ void setCurThreadName(const std::string& name)
 		info.dwThreadID = (DWORD)-1;
 		info.dwFlags = 0;
 	}
-	
+
 	__try {
 		RaiseException( 0x406D1388 /* MSVC EXCEPTION */, 0, sizeof(info)/sizeof(DWORD), (DWORD*)&info );
 	} __except (EXCEPTION_CONTINUE_EXECUTION) {}

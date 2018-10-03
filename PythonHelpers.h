@@ -13,7 +13,7 @@
 #include <Python.h>
 
 /* Some confusion about Python functions and their reference counting:
- 
+
  PyObject_SetAttrString: increments ref on value
  PyObject_GetAttrString: returns new reference!
  PyDict_SetItem: increments reference on key and value!
@@ -53,27 +53,31 @@ PyObject* attrChain(PyObject* base, const char* name) {
 	if(!base) return NULL;
 	PyObject* res = NULL;
 	Py_INCREF(base);
-	
+
 	while(true) {
 		const char* dot = strchr(name, '.');
 		if(!dot) break;
-		
+
+#if PY_MAJOR_VERSION == 2
 		PyObject* attrName = PyString_FromStringAndSize(name, dot - name);
+#else
+		PyObject* attrName = PyUnicode_FromStringAndSize(name, dot - name);
+#endif
 		if(!attrName)
 			goto final;
-		
+
 		PyObject* nextObj = PyObject_GetAttr(base, attrName);
 		Py_DECREF(attrName);
 		if(!nextObj)
 			goto final;
-		
+
 		Py_DECREF(base);
 		base = nextObj;
 		name = dot + 1;
 	}
-	
+
 	res = PyObject_GetAttrString(base, name);
-	
+
 final:
 	Py_XDECREF(base);
 	return res;
@@ -113,7 +117,11 @@ long attrChain_int_default(PyObject* base, const char* name, long def) {
 		}
 	}
 	else if(resObj != Py_None) {
+#if PY_MAJOR_VERSION == 2
 		res = PyInt_AsLong(resObj);
+#else
+		res = PyLong_AsLong(resObj);
+#endif
 		if(PyErr_Occurred()) {
 			PyErr_Print();
 			res = def;
@@ -136,21 +144,21 @@ PyObject* modAttrChain(const char* modName, const char* name) {
 static inline
 PyObject* _handleModuleCommand(const char* modName, const char* cmd, const char* paramFormat, va_list va) {
 	PyGILState_STATE gstate = PyGILState_Ensure();
-	
+
 	PyObject* func = NULL;
 	PyObject* args = NULL;
 	PyObject* ret = NULL;
-	
+
 	func = modAttrChain(modName, cmd);
 	if(!func) {
 		printf("Warning: Did not get %s.%s.\n", modName, cmd);
 		goto final;
 	}
-	
+
     if (paramFormat && *paramFormat) {
         args = Py_VaBuildValue(paramFormat, va);
 		if(!args) goto final;
-		
+
 		if (!PyTuple_Check(args)) {
 			PyObject* newArgs = PyTuple_New(1);
 			if(!newArgs) goto final;
@@ -160,17 +168,17 @@ PyObject* _handleModuleCommand(const char* modName, const char* cmd, const char*
     }
     else
         args = PyTuple_New(0);
-	
+
 	ret = PyObject_Call(func, args, NULL);
-	
+
 final:
 	if(PyErr_Occurred())
 		PyErr_Print();
-	
+
 	Py_XDECREF(func);
 	Py_XDECREF(args);
 	PyGILState_Release(gstate);
-	
+
 	return ret;
 }
 
@@ -248,6 +256,6 @@ int PyObject_SetAttrString_retain(PyObject* obj, const char* key, PyObject* valu
 #ifdef __cplusplus
 }
 #endif
-		
+
 
 #endif
