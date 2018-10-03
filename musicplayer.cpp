@@ -36,7 +36,7 @@
 
 
 #include "musicplayer.h"
-#include "PythonHelpers.h"
+#include "Py3Compat.h"
 
 #define module_name "musicplayer"
 

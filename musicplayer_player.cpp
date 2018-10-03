@@ -7,6 +7,7 @@
 #include "musicplayer.h"
 #include "PyUtils.h"
 #include "PythonHelpers.h"
+#include "Py3Compat.h"
 
 #include <stdio.h>
 #include <string.h>

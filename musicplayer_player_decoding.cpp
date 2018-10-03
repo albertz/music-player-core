@@ -12,6 +12,7 @@
 #include "PyUtils.h"
 #include "Log.hpp"
 #include "PythonHelpers.h"
+#include "Py3Compat.h"
 
 extern "C" {
 #include <libavformat/avformat.h>

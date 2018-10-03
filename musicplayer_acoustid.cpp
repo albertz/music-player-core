@@ -5,7 +5,7 @@
 // This code is under the 2-clause BSD license, see License.txt in the root directory of this project.
 
 #include "musicplayer.h"
-#include "PythonHelpers.h"
+#include "Py3Compat.h"
 #include <chromaprint.h>
 
 PyObject *
