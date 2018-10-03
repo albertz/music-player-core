@@ -507,7 +507,11 @@ PyObject* pyGetSoundDevices(PyObject* self) {
 
 	for(int i = 0; i < (int)devs.size(); ++i) {
 		const PaDeviceInfo* info = devs[i];
+#if PY_MAJOR_VERSION == 2
 		PyObject* s = PyString_FromString(info->name);
+#else
+		PyObject* s = PyUnicode_FromString(info->name);
+#endif
 		if(!s) {
 			Py_DECREF(l);
 			return NULL;
