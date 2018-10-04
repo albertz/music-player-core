@@ -171,6 +171,7 @@ Similar projects
 * `PyFFmpeg <http://code.google.com/p/pyffmpeg/>`_. LGPL. FFmpeg wrapper. Thus, prettylow-level and no sound output. You could probably glue PyFFmpeg and PyAudio together for something useful but I expect it to be quite unstable and too slow. Basically, tis glue is done in C++ in this module.
 * `GStreamer Python Bindings <http://gstreamer.freedesktop.org/modules/gst-python.html>`_. GStreamer is powerful but still too limited as a cross-platform music player backend solution. Quite heavy. That was my intuition. Maybe it's wrong and it would have been a perfect solution. But I think, in contrast, this module does a lot of things in a more compact and automatic/simpler way and at the same time provides more music player centric features.
 * `Beets <http://beets.radbox.org/>`_. In its core, it is a music library manager and manages the metadata. It can calculate ReplayGain and AcoustID fingerprint. Via BPD plugin, it becomes a MPD compatible daemon player, based on GStreamer.
+* `libgroove <https://github.com/andrewrk/libgroove>`_. Library to provide a music player, very similar in functionality like this project, but pure C, no Python bindings.
 
 Probably dead projects:
 
