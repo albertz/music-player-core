@@ -496,6 +496,26 @@ PyObject* player_getdict(PlayerObject* player) {
 		PyDict_SetItemString(player->dict, "onSongChange", Py_None);
 		PyDict_SetItemString(player->dict, "onSongFinished", Py_None);
 		PyDict_SetItemString(player->dict, "onPlayingStateChange", Py_None);
+		// The following entries are just there for code completion and inspection.
+		const char* attribs[] = {
+			"queue", "peekQueue",
+			"playing", "resetPlaying",
+			"curSong", "curSongPos", "curSongLen", "curSongMetadata", "curSongGainFactor",
+			"seekAbs", "seekRel",
+			"nextSong",
+			"reloadPeekStreams",
+			"startWorkerThread",
+			"readOutStream",
+			"volume",
+			"volumeSmoothClip",
+			"volumeAdjustEnabled",
+			"outSampleFormat", "outSamplerate", "outNumChannels",
+			"preferredSoundDevice", "actualSoundDevice",
+			"soundcardOutputEnabled",
+			"nextSongOnEof"
+		};
+		for(const char* attr : attribs)
+			PyDict_SetItemString(player->dict, attr, Py_None);
 	}
 	return player->dict;
 }
@@ -509,39 +529,6 @@ PyObject* player_getattr(PyObject* obj, char* key) {
 		PyObject* dict = player_getdict(player);
 		Py_XINCREF(dict);
 		return dict;
-	}
-
-	if(strcmp(key, "__members__") == 0) {
-		const Py_ssize_t C = 25;
-		PyObject* mlist = PyList_New(C);
-		int i = 0;
-		PyList_SetItem(mlist, i++, PyString_FromString("queue"));
-		PyList_SetItem(mlist, i++, PyString_FromString("peekQueue"));
-		PyList_SetItem(mlist, i++, PyString_FromString("playing"));
-		PyList_SetItem(mlist, i++, PyString_FromString("resetPlaying"));
-		PyList_SetItem(mlist, i++, PyString_FromString("curSong"));
-		PyList_SetItem(mlist, i++, PyString_FromString("curSongPos"));
-		PyList_SetItem(mlist, i++, PyString_FromString("curSongLen"));
-		PyList_SetItem(mlist, i++, PyString_FromString("curSongMetadata"));
-		PyList_SetItem(mlist, i++, PyString_FromString("curSongGainFactor"));
-		PyList_SetItem(mlist, i++, PyString_FromString("seekAbs"));
-		PyList_SetItem(mlist, i++, PyString_FromString("seekRel"));
-		PyList_SetItem(mlist, i++, PyString_FromString("nextSong"));
-		PyList_SetItem(mlist, i++, PyString_FromString("reloadPeekStreams"));
-		PyList_SetItem(mlist, i++, PyString_FromString("startWorkerThread"));
-		PyList_SetItem(mlist, i++, PyString_FromString("readOutStream"));
-		PyList_SetItem(mlist, i++, PyString_FromString("volume"));
-		PyList_SetItem(mlist, i++, PyString_FromString("volumeSmoothClip"));
-		PyList_SetItem(mlist, i++, PyString_FromString("volumeAdjustEnabled"));
-		PyList_SetItem(mlist, i++, PyString_FromString("outSampleFormat"));
-		PyList_SetItem(mlist, i++, PyString_FromString("outSamplerate"));
-		PyList_SetItem(mlist, i++, PyString_FromString("outNumChannels"));
-		PyList_SetItem(mlist, i++, PyString_FromString("preferredSoundDevice"));
-		PyList_SetItem(mlist, i++, PyString_FromString("actualSoundDevice"));
-		PyList_SetItem(mlist, i++, PyString_FromString("soundcardOutputEnabled"));
-		PyList_SetItem(mlist, i++, PyString_FromString("nextSongOnEof"));
-		assert(i == C);
-		return mlist;
 	}
 
 	if(strcmp(key, "queue") == 0) {
