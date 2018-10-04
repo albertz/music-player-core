@@ -16,8 +16,14 @@
 
 extern "C" {
 #include <libavformat/avformat.h>
+#include <libavcodec/avcodec.h>
 #include <libswresample/swresample.h>
 }
+
+#if LIBAVCODEC_VERSION_INT < AV_VERSION_INT(55,28,1)
+#define av_frame_alloc  avcodec_alloc_frame
+#define av_frame_unref avcodec_get_frame_defaults
+#endif
 
 #include <math.h>
 #include <unistd.h>
@@ -805,10 +811,10 @@ static long audio_decode_frame(PlayerObject* player, PlayerInStream *is, long le
 		/* NOTE: the audio packet can contain several frames */
 		while (pkt_temp->size > 0) {
 			if (!is->frame) {
-				if (!(is->frame = avcodec_alloc_frame()))
+                if (!(is->frame = av_frame_alloc()))
 					return AVERROR(ENOMEM);
 			} else
-				avcodec_get_frame_defaults(is->frame);
+                av_frame_unref(is->frame);
 
 			if (flush_complete)
 				break;
