@@ -10,6 +10,12 @@ from glob import glob
 from compile_utils import *
 import compile_utils as c
 
+try:
+    import better_exchook
+    better_exchook.install()
+except ImportError:
+    pass
+
 os.chdir(os.path.dirname(__file__))
 sys_exec(["mkdir", "-p", "build"])
 os.chdir("build")
@@ -19,23 +25,22 @@ StaticChromaprint = False
 print("* Building musicplayer.so")
 
 ffmpeg_files = \
-	sorted(glob("../*.cpp")) + \
-	(sorted(glob("../chromaprint/*.cpp")) if StaticChromaprint else [])
+    sorted(glob("../*.cpp")) + \
+    (sorted(glob("../chromaprint/*.cpp")) if StaticChromaprint else [])
 
 cc(
-	ffmpeg_files,
-	[
-		"-DHAVE_CONFIG_H",
-		"-g",
-	] +
-	get_python_ccopts() +
-	(["-I", "../chromaprint"] if StaticChromaprint else [])
+    ffmpeg_files,
+    [
+        "-DHAVE_CONFIG_H",
+        "-g",
+    ] +
+    get_python_ccopts() +
+    (["-I", "../chromaprint"] if StaticChromaprint else [])
 )
 
 link(
-	"../musicplayer.so",
-	[c.get_cc_outfilename(fn) for fn in ffmpeg_files],
-	get_python_linkopts() +
-	([] if StaticChromaprint else ["-lchromaprint"])
+    "../musicplayer.so",
+    [c.get_cc_outfilename(fn) for fn in ffmpeg_files],
+    get_python_linkopts() +
+    ([] if StaticChromaprint else ["-lchromaprint"])
 )
-

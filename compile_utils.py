@@ -227,7 +227,7 @@ def get_python_ccopts():
         try:
             out = check_output(["python3-config" if Python3 else "python-config", "--cflags"])
             flags += out.strip().decode("utf8").split()
-        except CalledProcessError:
+        except (CalledProcessError, OSError):
             pkg_flags = get_pkg_config("--cflags", "python3" if Python3 else "python")
             if pkg_flags is not None:
                 flags += pkg_flags
