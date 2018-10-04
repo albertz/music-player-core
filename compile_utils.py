@@ -80,7 +80,10 @@ LDFLAGS = os.environ.get("LDFLAGS", "").split()
 def link(outfile, infiles, options):
     if "--weak-linking" in options:
         idx = options.index("--weak-linking")
-        options[idx:idx + 1] = []  # ["-undefined", "dynamic_lookup"]
+        if sys.platform == "darwin":
+            options[idx:idx + 1] = ["-undefined", "dynamic_lookup"]
+        else:
+            options[idx:idx + 1] = []
 
     if is_uptodate(outfile, depfiles=infiles):
         print("up-to-date:", outfile)
@@ -88,11 +91,13 @@ def link(outfile, infiles, options):
 
     if sys.platform == "darwin":
         sys_exec(
-            ["libtool", "-dynamic", "-o", outfile] +
+            #["libtool", "-dynamic", "-o", outfile] +
+            ["cc"] +
             infiles +
             options +
             LDFLAGS +
-            ["-lc"]
+            ["-lc"] +
+            ["-o", outfile]
         )
     else:
         sys_exec(
