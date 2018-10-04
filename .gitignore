@@ -27,3 +27,10 @@ xcshareddata
 # automatically created (e.g. via qmake)
 Makefile
 Makefile.*
+
+# QtCreator
+/music-player-core.config
+/music-player-core.creator
+/music-player-core.files
+/music-player-core.includes
+
