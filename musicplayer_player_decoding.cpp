@@ -399,10 +399,9 @@ static int stream_component_open(PlayerInStream *is, AVFormatContext* ic, int st
 	//avctx->skip_loop_filter  = skip_loop_filter;
 	//avctx->error_concealment = error_concealment;
 
-	if(avctx->lowres) avctx->flags |= CODEC_FLAG_EMU_EDGE;
-	//if (fast)   avctx->flags2 |= CODEC_FLAG2_FAST;
-	if(codec->capabilities & CODEC_CAP_DR1)
-		avctx->flags |= CODEC_FLAG_EMU_EDGE;
+	//if(avctx->lowres) avctx->flags |= CODEC_FLAG_EMU_EDGE; // CODEC_FLAG_EMU_EDGE is deprecated
+	//if (fast)   avctx->flags2 |= AV_CODEC_FLAG2_FAST;
+	//if(codec->capabilities & AV_CODEC_CAP_DR1) avctx->flags |= CODEC_FLAG_EMU_EDGE; // CODEC_FLAG_EMU_EDGE is deprecated
 
 	if (avcodec_open2(avctx, codec, NULL /*opts*/) < 0) {
 		printf("(%s) avcodec_open2 failed (%s) (%s)\n", is->debugName.c_str(), ic->iformat->name, codec->name);
@@ -847,7 +846,7 @@ static long audio_decode_frame(PlayerObject* player, PlayerInStream *is, long le
 
 			if (!got_frame) {
 				/* stop sending empty packets if the decoder is finished */
-				if (!pkt_temp->data && dec->codec->capabilities & CODEC_CAP_DELAY)
+				if (!pkt_temp->data && dec->codec->capabilities & AV_CODEC_CAP_DELAY)
 					flush_complete = 1;
 				continue;
 			}

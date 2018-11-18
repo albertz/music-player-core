@@ -201,7 +201,7 @@ PyObject* player_alloc(PyTypeObject *type, Py_ssize_t nitems) {
         (void) PyObject_INIT_VAR((PyVarObject *)obj, type, nitems);
 
     if (PyType_IS_GC(type))
-        _PyObject_GC_TRACK(obj);
+        PyObject_GC_Track(obj); // _PyObject_GC_TRACK macro is not to be used for external modules
     return obj;
 }
 
