@@ -5,14 +5,16 @@ language: cpp
 dist: trusty
 
 python:
-  - "2.7" # this is the officially tested and supported one for now
+  - "2.7"
   - "2.6"
   - "3.2"
   - "3.3"
+  - "3.6" # this is the officially tested and supported one for now
 
 matrix:
   allow_failures:
     # not tested at all yet:
+    - python: 2.7
     - python: 2.6
     - python: 3.2
     - python: 3.3
@@ -33,7 +35,7 @@ before_install:
   - export PATH=$(echo $PATH | tr ':' "\n" | sed '/\/opt\/python/d' | tr "\n" ":" | sed "s|::|:|g")
 
   - sudo apt-get -qq update
-  - sudo apt-get install -y build-essential yasm libtool python-dev wget git
+  - sudo apt-get install -y build-essential yasm libtool python3-dev wget git
   - sudo apt-get install -y libchromaprint-dev portaudio19-dev
 
 # libboost
@@ -73,6 +75,6 @@ before_install:
 
 
 script:
-  - python setup.py build
-  - sudo python setup.py install
-  - python -c "import sys; print sys.path; import musicplayer as mp; p = mp.createPlayer()"
+  - python3 setup.py build
+  - sudo python3 setup.py install
+  - python3 -c "import sys; print(sys.path); import musicplayer as mp; p = mp.createPlayer()"
