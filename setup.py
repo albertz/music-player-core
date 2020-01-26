@@ -19,7 +19,8 @@ def pkgconfig(*packages, **kw):
 		if token[:2] in flag_map:
 			kw.setdefault(flag_map[token[:2]], []).append(token[2:])
 		else:  # throw others to extra_link_args
-			kw.setdefault('extra_link_args', []).append(token)
+			kw.setdefault('extra_link_args', []).append(token.decode("utf-8")) # decode() is needed because tokens are bytes
+
 	return kw
 
 

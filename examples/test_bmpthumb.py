@@ -7,7 +7,7 @@
 class Song:
 	def __init__(self, fn):
 		self.url = fn
-		self.f = open(fn)
+		self.f = open(fn, "rb")
 	def readPacket(self, bufSize):
 		s = self.f.read(bufSize)
 		return s
@@ -45,15 +45,15 @@ duration, bmp = musicplayer.calcBitmapThumbnail(Song(filename), bmpWidth, bmpHei
 
 def formatTime(t):
 	if t is None: return "?"
-	mins = long(t // 60)
+	mins = int(t // 60)
 	t -= mins * 60
 	hours = mins // 60
 	mins -= hours * 60
 	if hours: return "%02i:%02i:%02.0f" % (hours,mins,t)
 	return "%02i:%02.0f" % (mins,t)
 
-print filename, formatTime(duration)
+print(filename, formatTime(duration))
 
-open("thumbnail.bmp", "w").write(bmp)
+open("thumbnail.bmp", "wb").write(bmp)
 
 os.system("open thumbnail.bmp")
