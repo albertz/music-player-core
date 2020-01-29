@@ -23,6 +23,7 @@ xcshareddata
 # Python distutils
 /MANIFEST
 /dist
+/musicplayer.egg-info
 
 # automatically created (e.g. via qmake)
 Makefile

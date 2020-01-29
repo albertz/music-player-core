@@ -1,5 +1,6 @@
 
 import time
+import setuptools
 from subprocess import check_output
 from distutils.core import setup, Extension
 from glob import glob
