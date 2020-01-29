@@ -1,69 +1,13 @@
-language: cpp
+language: python
 
-# do not test on ubuntu 12.04-precise, using 14.04-trusty
-# 16.04-xenial not avail yet
-dist: trusty
+dist: xenial
 
 python:
-  - "2.7"
-  - "2.6"
-  - "3.2"
-  - "3.3"
-  - "3.6" # this is the officially tested and supported one for now
-
-matrix:
-  allow_failures:
-    # not tested at all yet:
-    - python: 2.7
-    - python: 2.6
-    - python: 3.2
-    - python: 3.3
-
-
-compiler:
-# clang 3.0 fails (boost error use of undeclared identifier 'intrusive_ptr_add_ref'), 3.4 ok
-  - clang
-# gcc from travis precise fails (gcc 4.6 doesn't know about "--std=c++11"), ok on tracis trusty
-  - gcc
-
-# for running test and loading libav
-env:
-  LD_LIBRARY_PATH=/usr/local/lib
+  - 3.6
 
 before_install:
-# trusty, https://github.com/travis-ci/travis-ci/issues/5326
-  - export PATH=$(echo $PATH | tr ':' "\n" | sed '/\/opt\/python/d' | tr "\n" ":" | sed "s|::|:|g")
-
   - sudo apt-get -qq update
-  - sudo apt-get install -y build-essential yasm libtool python3-dev wget git
-  - sudo apt-get install -y libchromaprint-dev portaudio19-dev
-
-# libboost
-# Travis' Boost is too old (1.46 I think; it misses boost/atomic.hpp).
-# We need at least >=1.55. smart_ptr/intrusive_ref_counter.hpp doesn't exist in older ones.
-# Thus, install a newer one:
-  - wget http://sourceforge.net/projects/boost/files/boost/1.55.0/boost_1_55_0.tar.bz2
-  - tar --bzip2 -xf boost_1_55_0.tar.bz2
-  - cd boost_1_55_0
-#  - ./bootstrap.sh --help
-# We only need atomic (and also only header-only).
-# All the rest takes way too much time to compile.
-  - sudo ./bootstrap.sh --with-libraries="atomic"
-# Way too much output, so just display the last 50 lines.
-  - sudo ./b2 install | tail -n 50
-  - cd ..
-# on trusty
-# - sudo apt-get install -y libboost1.55-dev
-# on xenial (libboost 1.58)
-# - sudo apt-get install -y libboost-dev
-
-# FFMPEG
-# need to use ffmpeg original branch, not libav branch that debian/ubuntu used in 2014 something
-# at least libswresample need to be ported on libav branch
-# from go-libav, then modified
-#  - wget -O ffmpeg.tar.bz2 http://ffmpeg.org/releases/ffmpeg-3.0.tar.bz2
-  - wget -O ffmpeg.tar.bz2 http://ffmpeg.org/releases/ffmpeg-2.8.tar.bz2
-  - mkdir ffmpeg && tar xvf ffmpeg.tar.bz2 -C ffmpeg --strip-components=1 && cd ffmpeg && ./configure --prefix=/usr/local --disable-debug --disable-static --enable-shared --enable-pic --enable-pthreads --disable-indev=jack && make -j4 && sudo make install && cd -
+  - sudo apt-get install -y yasm libtool python3-dev libchromaprint-dev portaudio19-dev libboost-dev libavformat-dev libavresample-dev
 
 #fedora 23
 ## add rpmfusion for ffmpeg
@@ -73,8 +17,19 @@ before_install:
 ## run
 # dnf install -y python ffmpeg portaudio libchromaprint
 
+install:
+  - pip3 install --upgrade pip setuptools wheel
 
 script:
   - python3 setup.py build
-  - sudo python3 setup.py install
+  - pip3 install .
   - python3 -c "import sys; print(sys.path); import musicplayer as mp; p = mp.createPlayer()"
+
+# Deploy package to PyPi
+deploy:
+  provider: pypi
+  user: __token__
+  password:
+    secure: "Your encrypted token"
+  distributions: "sdist bdist_wheel"
+  skip_existing: true
