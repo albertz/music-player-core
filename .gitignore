@@ -20,7 +20,7 @@ thumbnail.bmp
 .idea
 xcshareddata
 
-# Python distutils
+# Python distutils and setuptools
 /MANIFEST
 /dist
 /musicplayer.egg-info
