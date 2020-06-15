@@ -5,6 +5,7 @@
 #include <pythread.h>
 #include <atomic>
 #include <functional>
+#include <string>
 #include "NonCopyAble.hpp"
 
 
